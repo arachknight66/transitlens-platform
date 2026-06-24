@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>TransitLens Report - {{ result.target_id }}</title>
+<style>
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: #FFFFFF;
+        color: #1A1A1A;
+        line-height: 1.6;
+        margin: 0;
+        padding: 0;
+    }
+    .header {
+        background-color: #534AB7;
+        color: #FFFFFF;
+        padding: 20px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .header h1 {
+        margin: 0;
+        font-size: 24px;
+        letter-spacing: 1px;
+    }
+    .header .meta {
+        font-size: 14px;
+        text-align: right;
+        opacity: 0.8;
+    }
+    .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+    .summary-card {
+        background-color: #F8F9FA;
+        border: 1px solid #E9ECEF;
+        border-radius: 8px;
+        padding: 24px;
+        margin-bottom: 30px;
+    }
+    .target-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin-top: 0;
+        margin-bottom: 16px;
+    }
+    .badge {
+        display: inline-block;
+        background-color: {{ confidence_color }};
+        color: #FFFFFF;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 14px;
+        font-weight: 500;
+        margin-right: 16px;
+    }
+    .metrics {
+        display: flex;
+        gap: 30px;
+        margin-top: 20px;
+    }
+    .metric {
+        flex: 1;
+    }
+    .metric-label {
+        font-size: 12px;
+        color: #6C757D;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    .metric-value {
+        font-size: 20px;
+        font-weight: 600;
+        font-family: 'Courier New', Courier, monospace;
+    }
+    h2 {
+        border-bottom: 1px solid #E9ECEF;
+        padding-bottom: 8px;
+        margin-top: 40px;
+        color: #343A40;
+    }
+    .explanation {
+        background-color: rgba(83, 74, 183, 0.05);
+        border-left: 4px solid #534AB7;
+        padding: 16px 20px;
+        border-radius: 0 4px 4px 0;
+        margin-bottom: 30px;
+    }
+    .plot-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .plot-item {
+        border: 1px solid #E9ECEF;
+        border-radius: 6px;
+        padding: 10px;
+        background: #FFFFFF;
+    }
+    .plot-item img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 40px;
+    }
+    th, td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #E9ECEF;
+    }
+    th {
+        font-weight: 600;
+        color: #495057;
+        background-color: #F8F9FA;
+    }
+    td {
+        font-family: 'Courier New', Courier, monospace;
+    }
+    .footer {
+        text-align: center;
+        padding: 30px;
+        font-size: 12px;
+        color: #ADB5BD;
+        border-top: 1px solid #E9ECEF;
+        margin-top: 40px;
+    }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>TransitLens</h1>
+    <div class="meta">
+        Analysis Report<br>
+        {{ timestamp }}<br>
+        v{{ version }}
+    </div>
+</div>
+
+<div class="container">
+    
+    <div class="summary-card">
+        <h2 class="target-title">Target: {{ result.target_id }}</h2>
+        <div>
+            <span class="badge">{{ class_emoji_val }} {{ class_name }}</span>
+            <span style="font-size: 18px; font-weight: 600; color: {{ confidence_color }};">Confidence: {{ confidence_pct }}</span>
+        </div>
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-label">Orbital Period</div>
+                <div class="metric-value">{{ period_str }}</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Transit Depth</div>
+                <div class="metric-value">{{ depth_str }}</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Duration</div>
+                <div class="metric-value">{{ duration_str }}</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">SNR</div>
+                <div class="metric-value">{{ snr_str }}</div>
+            </div>
+        </div>
+    </div>
+
+    <h2>Classification Reasoning</h2>
+    <div class="explanation">
+        {{ result.explanation }}
+    </div>
+
+    <h2>Diagnostic Plots</h2>
+    <div class="plot-grid">
+        {% if plots.raw_lightcurve %}
+        <div class="plot-item"><img src="data:image/png;base64,{{ plots.raw_lightcurve }}" alt="Raw Lightcurve"></div>
+        {% endif %}
+        {% if plots.cleaned_lightcurve %}
+        <div class="plot-item"><img src="data:image/png;base64,{{ plots.cleaned_lightcurve }}" alt="Cleaned Lightcurve"></div>
+        {% endif %}
+        {% if plots.periodogram %}
+        <div class="plot-item"><img src="data:image/png;base64,{{ plots.periodogram }}" alt="Periodogram"></div>
+        {% endif %}
+        {% if plots.phase_folded %}
+        <div class="plot-item"><img src="data:image/png;base64,{{ plots.phase_folded }}" alt="Phase Folded"></div>
+        {% endif %}
+    </div>
+
+    <h2>Extracted Features</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Feature</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>BLS Power</td><td>{{ "%.4g"|format(features.bls_power) if features.bls_power is not none else "N/A" }}</td></tr>
+            <tr><td>SNR</td><td>{{ "%.2f"|format(features.snr) if features.snr is not none else "N/A" }}</td></tr>
+            <tr><td>Depth</td><td>{{ "%.4g"|format(features.depth) if features.depth is not none else "N/A" }}</td></tr>
+            <tr><td>Odd/Even Depth Delta</td><td>{{ "%.4g"|format(features.odd_even_depth_delta) if features.odd_even_depth_delta is not none else "N/A" }}</td></tr>
+            <tr><td>V-Shape Score</td><td>{{ "%.4g"|format(features.v_shape_score) if features.v_shape_score is not none else "N/A" }}</td></tr>
+            <tr><td>Transit Count</td><td>{{ features.transit_count if features.transit_count is not none else "N/A" }}</td></tr>
+            <tr><td>Local Noise</td><td>{{ "%.4g"|format(features.local_noise) if features.local_noise is not none else "N/A" }}</td></tr>
+            <tr><td>Depth to Noise Ratio</td><td>{{ "%.4g"|format(features.depth_to_noise_ratio) if features.depth_to_noise_ratio is not none else "N/A" }}</td></tr>
+            <tr><td>Phase Shape Kurtosis</td><td>{{ "%.4g"|format(features.phase_shape_kurtosis) if features.phase_shape_kurtosis is not none else "N/A" }}</td></tr>
+            <tr><td>Period (days)</td><td>{{ "%.4g"|format(features.period_days) if features.period_days is not none else "N/A" }}</td></tr>
+            <tr><td>Duration (days)</td><td>{{ "%.4g"|format(features.duration_days) if features.duration_days is not none else "N/A" }}</td></tr>
+        </tbody>
+    </table>
+
+</div>
+
+<div class="footer">
+    Generated by TransitLens &middot; Bharatiya Antariksh Hackathon 2026
+</div>
+
+</body>
+</html>

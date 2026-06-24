@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 60" width="320" height="60">
+  <!-- Transit dip curve -->
+  <g transform="translate(10, 30)">
+    <line x1="0" y1="0" x2="18" y2="0" stroke="#534AB7" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M18,0 Q22,-1 25,8 Q28,-1 32,0" stroke="#534AB7" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <line x1="32" y1="0" x2="50" y2="0" stroke="#534AB7" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <!-- TransitLens text -->
+  <text x="68" y="38" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="600" fill="#FAFAFA">
+    <tspan>Transit</tspan><tspan fill="#534AB7">Lens</tspan>
+  </text>
+</svg>

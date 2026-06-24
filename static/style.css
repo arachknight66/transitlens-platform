@@ -1,0 +1,331 @@
+/* ──────────────────────────────────────────────────────────────
+   TransitLens Platform — Custom Streamlit CSS Overrides
+   Theme: Dark astronomy theme with TransitLens purple (#534AB7)
+   ────────────────────────────────────────────────────────────── */
+
+/* ── CSS Variables ──────────────────────────────────────────── */
+:root {
+    --primary-color: #534AB7;
+    --primary-light: rgba(83, 74, 183, 0.15);
+    --primary-ultra-light: rgba(83, 74, 183, 0.08);
+    --bg-dark: #0E1117;
+    --bg-card: #1A1A2E;
+    --text-primary: #FAFAFA;
+    --text-secondary: #AAAAAA;
+    --text-muted: #888888;
+    --exoplanet-color: #3C3489;
+    --eclipsing-binary-color: #712B13;
+    --noise-color: #444441;
+    --border-radius: 8px;
+    --transition: all 0.2s ease;
+}
+
+/* ── Page Background ───────────────────────────────────────── */
+.stApp {
+    background-color: var(--bg-dark);
+}
+
+/* ── Typography ────────────────────────────────────────────── */
+h1 {
+    font-size: 24px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+}
+
+h2 {
+    font-size: 18px !important;
+    font-weight: 500 !important;
+    color: var(--text-primary) !important;
+}
+
+h3 {
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    color: var(--text-primary) !important;
+}
+
+p, .stMarkdown {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+/* ── Buttons — General ─────────────────────────────────────── */
+.stButton > button {
+    border-radius: var(--border-radius);
+    padding: 10px 24px;
+    font-weight: 500;
+    transition: var(--transition);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stButton > button:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 12px rgba(83, 74, 183, 0.3);
+    transform: translateY(-1px);
+}
+
+/* ── Demo Candidate Cards ──────────────────────────────────── */
+.candidate-card .stButton > button {
+    width: 100%;
+    min-height: 180px;
+    padding: 20px;
+    background: var(--bg-card);
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    font-size: 14px;
+    text-align: left;
+    white-space: normal;
+    line-height: 1.5;
+    transition: var(--transition);
+}
+
+.candidate-card .stButton > button:hover {
+    border-color: var(--primary-color);
+    background: rgba(83, 74, 183, 0.12);
+    box-shadow: 0 4px 20px rgba(83, 74, 183, 0.25);
+    transform: translateY(-2px);
+}
+
+/* ── Metric Cards (Parameter Panel) ────────────────────────── */
+[data-testid="stMetric"] {
+    background: var(--primary-ultra-light);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    border: 1px solid rgba(83, 74, 183, 0.12);
+}
+
+[data-testid="stMetricLabel"] {
+    font-size: 12px !important;
+    color: var(--text-secondary) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+[data-testid="stMetricValue"] {
+    font-size: 24px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+}
+
+/* ── Feature Table ─────────────────────────────────────────── */
+.feature-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.feature-table th {
+    text-align: left;
+    padding: 8px 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.feature-table td {
+    padding: 8px 12px;
+    color: var(--text-primary);
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+}
+
+.feature-table tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.feature-table tr:hover {
+    background: rgba(83, 74, 183, 0.06);
+}
+
+/* ── Plot Containers ───────────────────────────────────────── */
+.plot-container {
+    background: var(--primary-ultra-light);
+    border-radius: var(--border-radius);
+    padding: 12px;
+    border: 1px solid rgba(83, 74, 183, 0.08);
+    margin-bottom: 8px;
+}
+
+/* ── Download Buttons ──────────────────────────────────────── */
+.stDownloadButton > button {
+    background: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    border-radius: var(--border-radius);
+    padding: 8px 20px;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.stDownloadButton > button:hover {
+    background: var(--primary-light);
+    box-shadow: 0 2px 10px rgba(83, 74, 183, 0.2);
+}
+
+/* ── Result Card Bar ───────────────────────────────────────── */
+.result-card-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--primary-ultra-light);
+    border-radius: var(--border-radius);
+    padding: 16px 24px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(83, 74, 183, 0.12);
+}
+
+/* ── Header Breadcrumb ─────────────────────────────────────── */
+.header-breadcrumb {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 16px;
+}
+
+.header-breadcrumb .wordmark {
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 15px;
+}
+
+/* ── Connection Status Dots ────────────────────────────────── */
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.status-dot.connected {
+    background: #4CAF50;
+    box-shadow: 0 0 6px rgba(76, 175, 80, 0.5);
+}
+
+.status-dot.fallback {
+    background: #FF9800;
+    box-shadow: 0 0 6px rgba(255, 152, 0, 0.5);
+}
+
+.status-dot.disconnected {
+    background: #666666;
+}
+
+/* ── Sidebar Styling ───────────────────────────────────────── */
+[data-testid="stSidebar"] {
+    background: #0A0A1A;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-testid="stSidebar"] .stButton > button {
+    width: 100%;
+    text-align: left;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    font-size: 14px;
+}
+
+[data-testid="stSidebar"] .stButton > button:hover {
+    background: var(--primary-light);
+}
+
+/* ── Explanation Box ───────────────────────────────────────── */
+.explanation-box {
+    background: rgba(83, 74, 183, 0.06);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    border-left: 3px solid var(--primary-color);
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-primary);
+}
+
+/* ── Hero Section ──────────────────────────────────────────── */
+.hero-section {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.hero-tagline {
+    font-size: 20px;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    font-weight: 400;
+}
+
+.hero-subtagline {
+    font-size: 14px;
+    color: var(--primary-color);
+    letter-spacing: 2px;
+    font-weight: 500;
+}
+
+/* ── Statistics Row ────────────────────────────────────────── */
+.stat-card {
+    text-align: center;
+    padding: 20px;
+    background: var(--primary-ultra-light);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(83, 74, 183, 0.1);
+}
+
+.stat-number {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(83, 74, 183, 0.3);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(83, 74, 183, 0.5);
+}
+
+/* ── Expander ──────────────────────────────────────────────── */
+.streamlit-expanderHeader {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: var(--text-primary) !important;
+}
+
+/* ── Progress Bar ──────────────────────────────────────────── */
+.stProgress > div > div {
+    background-color: var(--primary-color);
+}
+
+/* ── Footer ────────────────────────────────────────────────── */
+.footer-text {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    padding: 20px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: 40px;
+}

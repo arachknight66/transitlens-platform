@@ -1,0 +1,34 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Virtual environments
+.env
+.venv/
+venv/
+
+# Streamlit
+.streamlit/
+
+# Exports (generated at runtime)
+exports/
+
+# FITS files (astronomy data — large binary)
+demo_data/*.fits
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Pytest
+.pytest_cache/
+
+# Coverage
+htmlcov/
+.coverage
