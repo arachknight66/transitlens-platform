@@ -7,7 +7,7 @@ TransitLens Platform is the front-end of the TransitLens system, built for the B
 ## Quick Start
 
 ```bash
-git clone https://github.com/transitlens/transitlens-platform
+git clone https://github.com/arachknight66/transitlens-platform.git
 cd transitlens-platform
 pip install -r requirements.txt
 streamlit run main.py
