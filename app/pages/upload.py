@@ -51,17 +51,6 @@ def _handle_upload(uploaded_file, target_name):
         
         if uploaded_file.name.lower().endswith('.csv'):
             time_arr, flux_arr = load_csv(uploaded_file)
-            
-            if len(time_arr) < 500:
-                st.error("CSV must contain at least 500 data points for reliable analysis.")
-                return
-                
-            import numpy as np
-            med_flux = np.median(flux_arr)
-            if not (0.8 <= med_flux <= 1.2):
-                st.error(f"Flux values appear un-normalised (median = {med_flux:.2f}). Please normalise flux around 1.0.")
-                return
-                
             with st.spinner("Analyzing light curve from CSV..."):
                 result = api_client.analyze(time_arr, flux_arr, target_id=name)
         else:

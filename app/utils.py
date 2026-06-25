@@ -56,8 +56,9 @@ def decode_plot(b64_string: str):
 def load_csv(file_or_path) -> tuple:
     """Accept either a file path string or a Streamlit UploadedFile object.
     Returns (time_array, flux_array) as numpy arrays.
-    Validates that the CSV has 'time' and 'flux' columns.
-    Raises InvalidCSVError if columns are missing or values are not numeric.
+    Validates that the CSV has 'time' and 'flux' columns, has at least 500 finite
+    points, has strictly monotonic time timestamps, and no infinite values.
+    Raises InvalidCSVError if validation fails.
     """
     try:
         if isinstance(file_or_path, str):
@@ -81,6 +82,35 @@ def load_csv(file_or_path) -> tuple:
         flux_arr = df["flux"].to_numpy(dtype=float)
     except (ValueError, TypeError) as e:
         raise InvalidCSVError(f"time and flux columns must contain numeric values: {e}")
+
+    # Step 1: Check length mismatch
+    if len(time_arr) != len(flux_arr):
+        raise InvalidCSVError(f"time and flux columns must have equal length, got time={len(time_arr)}, flux={len(flux_arr)}")
+
+    # Step 2: Check infinities
+    if np.any(np.isinf(time_arr)):
+        raise InvalidCSVError("time column contains infinite values")
+    if np.any(np.isinf(flux_arr)):
+        raise InvalidCSVError("flux column contains infinite values")
+
+    # Step 3: Filter NaNs to check final size
+    valid_mask = np.isfinite(time_arr) & np.isfinite(flux_arr)
+    time_clean = time_arr[valid_mask]
+    flux_clean = flux_arr[valid_mask]
+    
+    if len(time_clean) < 500:
+        raise InvalidCSVError(f"CSV must contain at least 500 finite data points, found {len(time_clean)}")
+
+    # Step 4: Check monotonicity on the cleaned time array (after NaN removal)
+    diffs = np.diff(time_clean)
+    if np.any(diffs <= 0):
+        n_bad = int(np.sum(diffs <= 0))
+        raise InvalidCSVError(f"time column must be strictly monotonically increasing; found {n_bad} non-increasing step(s)")
+
+    # Step 5: Check normalization (median range [0.8, 1.2])
+    med_flux = float(np.median(flux_clean))
+    if not (0.8 <= med_flux <= 1.2):
+        raise InvalidCSVError(f"Flux values appear un-normalised (median = {med_flux:.4f}). Please normalise flux around 1.0.")
 
     return time_arr, flux_arr
 
