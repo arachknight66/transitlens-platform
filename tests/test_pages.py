@@ -31,7 +31,7 @@ def _make_mock_st():
             "export": {"pdf_enabled": False},
         },
     }
-    def mock_columns(spec):
+    def mock_columns(spec, *args, **kwargs):
         if isinstance(spec, int):
             return [MagicMock() for _ in range(spec)]
         return [MagicMock() for _ in spec]

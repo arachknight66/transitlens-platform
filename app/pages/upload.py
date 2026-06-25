@@ -23,7 +23,7 @@ def render():
         st.markdown("Fetch data directly from MAST for a given TESS Input Catalog (TIC) ID.")
         st.warning("Requires internet connection and ml-core to be running.")
         
-        tic_id = st.text_input("TIC ID", placeholder="e.g. 261136679")
+        tic_id = st.text_input("TIC ID", placeholder="e.g. 261136679", key="upload_tic")
         
         st.markdown("Quick select:")
         cols = st.columns(3)
@@ -37,15 +37,13 @@ def render():
             st.session_state["upload_tic"] = "25155310"
             st.rerun()
             
-        if st.session_state.get("upload_tic"):
-            tic_id = st.session_state["upload_tic"]
-            
-        st.button(
+        if st.button(
             "Fetch & Analyse",
             type="primary",
-            disabled=True,
-            help="TESS fetch integration not yet implemented in this demo version."
-        )
+            disabled=not tic_id.strip(),
+            help="Fetch TESS light curve from MAST or cache and run the pipeline."
+        ):
+            _handle_tess(tic_id)
 
 def _handle_upload(uploaded_file, target_name):
     try:
@@ -78,3 +76,16 @@ def _handle_upload(uploaded_file, target_name):
         st.error(f"Invalid CSV format: {str(e)}")
     except Exception as e:
         st.error(f"Analysis failed: {str(e)}")
+
+def _handle_tess(tic_id):
+    try:
+        clean_id = tic_id.upper().replace("TIC", "").replace("-", "").strip()
+        with st.spinner(f"Fetching and analyzing TESS target TIC {clean_id}..."):
+            result = api_client.analyze_tess(clean_id)
+            
+        state.set_result(result)
+        state.set_page("results")
+        st.rerun()
+    except Exception as e:
+        st.error(f"TESS Analysis failed: {str(e)}")
+

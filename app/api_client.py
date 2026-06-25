@@ -196,3 +196,55 @@ def analyze_file(uploaded_file, target_id: str, metadata=None) -> dict:
         f"ml-core is unavailable ({last_error}). "
         "Try the Demo page for pre-computed results."
     )
+
+
+def analyze_tess(tic_id: str, sector: int = None, metadata=None) -> dict:
+    """Sends a request to ml-core's TESS analysis endpoint by TIC ID."""
+    cfg = _get_config()
+    base_url = cfg.get("base_url", "http://127.0.0.1:8000")
+    timeout = cfg.get("timeout_seconds", 30)
+
+    is_healthy = health_check()
+    st.session_state["mlcore_connected"] = is_healthy
+
+    data = {
+        "tic_id": tic_id,
+        "metadata": json.dumps(metadata or {})
+    }
+    if sector is not None:
+        data["sector"] = sector
+
+    last_error = None
+    for attempt in range(2):
+        try:
+            resp = requests.post(
+                f"{base_url}/analyze/tess",
+                data=data,
+                timeout=timeout,
+            )
+            if resp.status_code == 200:
+                st.session_state["using_fallback"] = False
+                return resp.json()
+            elif resp.status_code == 422:
+                error_detail = resp.json().get("detail", "Validation error")
+                raise MLCoreUnavailableError(f"ml-core validation error: {error_detail}")
+            else:
+                last_error = f"ml-core returned HTTP {resp.status_code}"
+        except requests.exceptions.Timeout:
+            last_error = "ml-core request timed out"
+            if attempt == 0:
+                continue
+        except requests.exceptions.ConnectionError:
+            last_error = "ml-core is not reachable"
+            break
+        except MLCoreUnavailableError:
+            raise
+        except Exception as e:
+            last_error = str(e)
+            break
+
+    raise MLCoreUnavailableError(
+        f"ml-core is unavailable ({last_error}). "
+        "Try the Demo page for pre-computed results."
+    )
+

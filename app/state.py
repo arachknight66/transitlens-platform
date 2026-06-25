@@ -18,6 +18,7 @@ DEFAULTS = {
     "mlcore_connected": False,         # bool — last known health check result
     "last_health_check": None,         # float or None — Unix timestamp of last health check
     "export_html_ready": False,        # bool — True if HTML export generated for current result
+    "upload_tic": "",                  # str — entered TIC ID in the upload page
     "config": None,                    # dict — platform configuration from config.yaml
 }
 
