@@ -41,6 +41,19 @@ if state.get_config() is None:
     config = load_config()
     state.set_config(config)
 
+# Periodic global health check (TTL based)
+import time
+from app.api_client import health_check
+last_hc = state.get_last_health_check()
+ttl = state.get_config().get("mlcore", {}).get("health_check_ttl_seconds", 30) if state.get_config() else 30
+current_time = time.time()
+
+if last_hc is None or (current_time - last_hc) > ttl:
+    is_healthy = health_check()
+    state.set_mlcore_connected(is_healthy)
+    state.set_last_health_check(current_time)
+
+
 
 # ── Render sidebar and header (appear on every page) ──
 sidebar.render()

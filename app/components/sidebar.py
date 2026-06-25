@@ -32,7 +32,7 @@ def render():
         is_fallback = state.get_using_fallback()
         config = state.get_config()
         
-        mlcore_url = "http://localhost:8000"
+        mlcore_url = "http://127.0.0.1:8000"
         if config and "mlcore" in config:
             mlcore_url = config["mlcore"].get("base_url", mlcore_url)
         

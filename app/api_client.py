@@ -51,7 +51,7 @@ def health_check() -> bool:
     Never raises an exception to the caller.
     """
     cfg = _get_config()
-    base_url = cfg.get("base_url", "http://localhost:8000")
+    base_url = cfg.get("base_url", "http://127.0.0.1:8000")
     timeout = cfg.get("health_check_timeout", 3)
     try:
         resp = requests.get(f"{base_url}/health", timeout=timeout)
@@ -74,7 +74,7 @@ def analyze(time_arr, flux_arr, target_id: str, metadata=None, config_override=N
     4. On failure: return fallback or raise MLCoreUnavailableError.
     """
     cfg = _get_config()
-    base_url = cfg.get("base_url", "http://localhost:8000")
+    base_url = cfg.get("base_url", "http://127.0.0.1:8000")
     timeout = cfg.get("timeout_seconds", 30)
     demo_fallback = cfg.get("demo_fallback", True)
 
@@ -143,5 +143,56 @@ def analyze(time_arr, flux_arr, target_id: str, metadata=None, config_override=N
     raise MLCoreUnavailableError(
         f"ml-core is unavailable ({last_error}). "
         "No cached results available for this target. "
+        "Try the Demo page for pre-computed results."
+    )
+
+
+def analyze_file(uploaded_file, target_id: str, metadata=None) -> dict:
+    """Uploads a FITS file directly to ml-core's file analysis endpoint."""
+    cfg = _get_config()
+    base_url = cfg.get("base_url", "http://127.0.0.1:8000")
+    timeout = cfg.get("timeout_seconds", 30)
+
+    is_healthy = health_check()
+    st.session_state["mlcore_connected"] = is_healthy
+
+    files = {"file": (uploaded_file.name, uploaded_file.getvalue(), "application/octet-stream")}
+    data = {
+        "target_id": target_id,
+        "metadata": json.dumps(metadata or {})
+    }
+
+    last_error = None
+    for attempt in range(2):
+        try:
+            resp = requests.post(
+                f"{base_url}/analyze/file",
+                files=files,
+                data=data,
+                timeout=timeout,
+            )
+            if resp.status_code == 200:
+                st.session_state["using_fallback"] = False
+                return resp.json()
+            elif resp.status_code == 422:
+                error_detail = resp.json().get("detail", "Validation error")
+                raise MLCoreUnavailableError(f"ml-core validation error: {error_detail}")
+            else:
+                last_error = f"ml-core returned HTTP {resp.status_code}"
+        except requests.exceptions.Timeout:
+            last_error = "ml-core request timed out"
+            if attempt == 0:
+                continue
+        except requests.exceptions.ConnectionError:
+            last_error = "ml-core is not reachable"
+            break
+        except MLCoreUnavailableError:
+            raise
+        except Exception as e:
+            last_error = str(e)
+            break
+
+    raise MLCoreUnavailableError(
+        f"ml-core is unavailable ({last_error}). "
         "Try the Demo page for pre-computed results."
     )
