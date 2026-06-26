@@ -23,19 +23,18 @@ def render():
         st.markdown("Fetch data directly from MAST for a given TESS Input Catalog (TIC) ID.")
         st.warning("Requires internet connection and ml-core to be running.")
         
-        tic_id = st.text_input("TIC ID", placeholder="e.g. 261136679", key="upload_tic")
+        # Quick-select callbacks — these set state BEFORE the widget is
+        # instantiated on the next rerun, avoiding the Streamlit API error.
+        def _set_tic(val):
+            st.session_state["upload_tic"] = val
         
         st.markdown("Quick select:")
         cols = st.columns(3)
-        if cols[0].button("TIC 261136679 (Pi Mensae c)"):
-            st.session_state["upload_tic"] = "261136679"
-            st.rerun()
-        if cols[1].button("TIC 112838241 (WASP-126 b)"):
-            st.session_state["upload_tic"] = "112838241"
-            st.rerun()
-        if cols[2].button("TIC 25155310 (WASP-18 b)"):
-            st.session_state["upload_tic"] = "25155310"
-            st.rerun()
+        cols[0].button("TIC 261136679 (Pi Mensae c)", on_click=_set_tic, args=("261136679",))
+        cols[1].button("TIC 112838241 (WASP-126 b)", on_click=_set_tic, args=("112838241",))
+        cols[2].button("TIC 25155310 (WASP-18 b)", on_click=_set_tic, args=("25155310",))
+        
+        tic_id = st.text_input("TIC ID", placeholder="e.g. 261136679", key="upload_tic")
             
         if st.button(
             "Fetch & Analyse",

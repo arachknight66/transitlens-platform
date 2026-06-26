@@ -44,9 +44,13 @@ class TestUtilsFunctions:
     def test_class_display_name(self):
         """class_display_name converts internal names to display names."""
         from app.utils import class_display_name
-        assert class_display_name("exoplanet_like") == "Exoplanet-like"
-        assert class_display_name("eclipsing_binary_like") == "Eclipsing Binary-like"
-        assert class_display_name("noise_or_other") == "Noise / Other"
+        assert class_display_name("exoplanet_like") == "Exoplanet Transit"
+        assert class_display_name("eclipsing_binary_like") == "Eclipsing Binary"
+        assert class_display_name("noise_or_other") == "Stellar Variability / Other"
+        assert class_display_name("exoplanet_transit") == "Exoplanet Transit"
+        assert class_display_name("eclipsing_binary") == "Eclipsing Binary"
+        assert class_display_name("blend_contamination") == "Blend / Contamination"
+        assert class_display_name("stellar_variability_or_other") == "Stellar Variability / Other"
 
     def test_class_emoji(self):
         """class_emoji returns correct emojis."""
@@ -54,6 +58,10 @@ class TestUtilsFunctions:
         assert class_emoji("exoplanet_like") == "🪐"
         assert class_emoji("eclipsing_binary_like") == "⭐"
         assert class_emoji("noise_or_other") == "📊"
+        assert class_emoji("exoplanet_transit") == "🪐"
+        assert class_emoji("eclipsing_binary") == "⭐"
+        assert class_emoji("blend_contamination") == "👥"
+        assert class_emoji("stellar_variability_or_other") == "📊"
 
 
 class TestConfidenceBadge:

@@ -36,7 +36,7 @@ def _make_mock_st():
             return [MagicMock() for _ in range(spec)]
         return [MagicMock() for _ in spec]
     mock.columns.side_effect = mock_columns
-    mock.tabs.return_value = [MagicMock(), MagicMock()]
+    mock.tabs.side_effect = lambda titles: [MagicMock() for _ in titles]
     return mock
 
 

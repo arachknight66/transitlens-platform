@@ -127,9 +127,13 @@ def load_config(path: str = None) -> dict:
 def class_display_name(class_str: str) -> str:
     """Convert internal class string to display-friendly name."""
     mapping = {
-        "exoplanet_like": "Exoplanet-like",
-        "eclipsing_binary_like": "Eclipsing Binary-like",
-        "noise_or_other": "Noise / Other",
+        "exoplanet_transit": "Exoplanet Transit",
+        "eclipsing_binary": "Eclipsing Binary",
+        "blend_contamination": "Blend / Contamination",
+        "stellar_variability_or_other": "Stellar Variability / Other",
+        "exoplanet_like": "Exoplanet Transit",
+        "eclipsing_binary_like": "Eclipsing Binary",
+        "noise_or_other": "Stellar Variability / Other",
     }
     return mapping.get(class_str, class_str)
 
@@ -137,8 +141,13 @@ def class_display_name(class_str: str) -> str:
 def class_emoji(class_str: str) -> str:
     """Return emoji for a given class string."""
     mapping = {
+        "exoplanet_transit": "🪐",
+        "eclipsing_binary": "⭐",
+        "blend_contamination": "👥",
+        "stellar_variability_or_other": "📊",
         "exoplanet_like": "🪐",
         "eclipsing_binary_like": "⭐",
         "noise_or_other": "📊",
     }
     return mapping.get(class_str, "❓")
+

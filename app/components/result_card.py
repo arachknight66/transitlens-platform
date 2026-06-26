@@ -15,7 +15,15 @@ def render(result: dict = None):
     target_id = result.get("target_id", "Unknown")
     predicted_class = result.get("predicted_class", "noise_or_other")
     conf = result.get("confidence", 0.0)
-    color = {"exoplanet_like": "#3C3489", "eclipsing_binary_like": "#712B13", "noise_or_other": "#444441"}.get(predicted_class, "#444441")
+    color = {
+        "exoplanet_transit": "#3C3489",
+        "eclipsing_binary": "#712B13",
+        "blend_contamination": "#D48B00",
+        "stellar_variability_or_other": "#444441",
+        "exoplanet_like": "#3C3489",
+        "eclipsing_binary_like": "#712B13",
+        "noise_or_other": "#444441",
+    }.get(predicted_class, "#444441")
     name = class_display_name(predicted_class)
     emoji = class_emoji(predicted_class)
     cached = " <span style='color:#888;font-size:12px;'>(cached)</span>" if state.get_using_fallback() else ""
