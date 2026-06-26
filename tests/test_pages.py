@@ -24,9 +24,10 @@ def _make_mock_st():
         "config": {
             "mlcore": {"base_url": "http://localhost:8000", "demo_fallback": True},
             "ui": {"confidence_colors": {
-                "exoplanet_like": "#3C3489",
-                "eclipsing_binary_like": "#712B13",
-                "noise_or_other": "#444441",
+                "exoplanet_transit": "#3C3489",
+                "eclipsing_binary": "#712B13",
+                "blend_contamination": "#D48B00",
+                "stellar_variability_or_other": "#444441",
             }},
             "export": {"pdf_enabled": False},
         },

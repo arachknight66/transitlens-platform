@@ -57,15 +57,15 @@ class TestAnalyzeFallback:
         from app.api_client import _load_fallback_result
         result = _load_fallback_result("candidate_a")
         assert result is not None
-        assert result["predicted_class"] == "exoplanet_like"
+        assert result["predicted_class"] == "exoplanet_transit"
 
         result_b = _load_fallback_result("candidate_b")
         assert result_b is not None
-        assert result_b["predicted_class"] == "eclipsing_binary_like"
+        assert result_b["predicted_class"] == "eclipsing_binary"
 
         result_c = _load_fallback_result("candidate_c")
         assert result_c is not None
-        assert result_c["predicted_class"] == "noise_or_other"
+        assert result_c["predicted_class"] == "stellar_variability_or_other"
 
     def test_analyze_raises_when_no_fallback(self):
         """analyze() raises MLCoreUnavailableError when ml-core unreachable and fallback disabled."""

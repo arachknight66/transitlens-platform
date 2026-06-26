@@ -71,7 +71,7 @@ class TestConfidenceBadge:
         """confidence_badge.render() calls st.markdown with correct colour."""
         with patch("app.components.confidence_badge.st") as mock_st:
             from app.components.confidence_badge import render
-            render("exoplanet_like", 0.88)
+            render("exoplanet_transit", 0.88)
             mock_st.markdown.assert_called_once()
             call_args = mock_st.markdown.call_args
             html = call_args[0][0]

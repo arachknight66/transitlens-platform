@@ -13,9 +13,10 @@ def generate_html(result: dict) -> bytes:
     config = load_config()
     predicted_class = result.get("predicted_class", "noise_or_other")
     confidence_colors = {
-        "exoplanet_like": "#3C3489",
-        "eclipsing_binary_like": "#712B13",
-        "noise_or_other": "#444441",
+        "exoplanet_transit": "#3C3489",
+        "eclipsing_binary": "#712B13",
+        "blend_contamination": "#D48B00",
+        "stellar_variability_or_other": "#444441",
     }
 
     rendered = template.render(

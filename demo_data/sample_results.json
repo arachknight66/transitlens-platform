@@ -2,7 +2,7 @@
   "candidate_a": {
     "target_id": "candidate_a",
     "candidate_detected": true,
-    "predicted_class": "exoplanet_like",
+    "predicted_class": "exoplanet_transit",
     "confidence": 0.88,
     "period_days": 3.4217,
     "duration_days": 0.158,
@@ -35,7 +35,7 @@
   "candidate_b": {
     "target_id": "candidate_b",
     "candidate_detected": true,
-    "predicted_class": "eclipsing_binary_like",
+    "predicted_class": "eclipsing_binary",
     "confidence": 0.94,
     "period_days": 1.8694,
     "duration_days": 0.104,
@@ -68,7 +68,7 @@
   "candidate_c": {
     "target_id": "candidate_c",
     "candidate_detected": false,
-    "predicted_class": "noise_or_other",
+    "predicted_class": "stellar_variability_or_other",
     "confidence": 0.91,
     "period_days": 0.0,
     "duration_days": 0.0,

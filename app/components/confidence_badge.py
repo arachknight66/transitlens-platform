@@ -3,9 +3,10 @@ import streamlit as st
 from app.utils import class_display_name, class_emoji
 
 COLOR_MAP = {
-    "exoplanet_like": "#3C3489",
-    "eclipsing_binary_like": "#712B13",
-    "noise_or_other": "#444441",
+    "exoplanet_transit": "#3C3489",
+    "eclipsing_binary": "#712B13",
+    "blend_contamination": "#D48B00",
+    "stellar_variability_or_other": "#444441",
 }
 
 def render(predicted_class: str, confidence: float):
