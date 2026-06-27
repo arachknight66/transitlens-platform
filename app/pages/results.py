@@ -142,6 +142,35 @@ def _render_fit_tab(result):
         else:
             st.error(f"**Low significance**: FAP = {fap:.4f} — signal cannot be confidently distinguished from noise.")
 
+    # Render new Phase 7 plots in the fit parameters tab
+    plots = result.get("plots", {})
+    transit_stack = plots.get("transit_stack")
+    posterior_corner = plots.get("posterior_corner")
+    alias_comparison = plots.get("alias_comparison")
+    
+    if transit_stack or posterior_corner or alias_comparison:
+        st.write("")
+        st.write("---")
+        st.markdown("#### Publication-Quality Fit Visualizations")
+        
+        from app.utils import decode_plot
+        
+        if transit_stack:
+            img = decode_plot(transit_stack)
+            st.image(img, use_container_width=True, caption="Individual Transit Event Stack (Cycle-to-Cycle variation)")
+            
+        if posterior_corner or alias_comparison:
+            cols_plots = st.columns(2)
+            with cols_plots[0]:
+                if posterior_corner:
+                    img = decode_plot(posterior_corner)
+                    st.image(img, use_container_width=True, caption="MCMC Joint Posterior Distributions (corner plot)")
+            with cols_plots[1]:
+                if alias_comparison:
+                    img = decode_plot(alias_comparison)
+                    st.image(img, use_container_width=True, caption="Folding Diagnostic Grid (P/2, P, 2P comparisons)")
+
+
 
 def _render_blend_tab(result):
     """Blend and crowding diagnostics tab."""
