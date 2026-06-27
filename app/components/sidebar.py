@@ -9,12 +9,14 @@ def render():
         st.markdown("### Navigation")
         
         pages = {
-            "home": "🏠 Home",
-            "demo": "🔭 Demo",
-            "upload": "📤 Upload",
-            "results": "📊 Results",
-            "about": "ℹ️ About"
+            "home": "🏠 Analyze",
+            "candidates": "🔍 Candidates",
+            "evaluation": "📈 Evaluation",
+            "runs": "📋 Runs",
+            "method": "⚙️ Method",
         }
+        if state.get_result() is not None:
+            pages["results"] = "📊 Results"
         
         current_page = state.get_page()
         

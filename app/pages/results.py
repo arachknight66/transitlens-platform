@@ -104,15 +104,29 @@ def _render_fit_tab(result):
     # Parameter table with uncertainties
     params = [
         ("Orbital Period", result.get("period_days"), result.get("period_uncertainty_days"), "days"),
-        ("Transit Depth", result.get("depth"), result.get("depth_uncertainty"), "fractional"),
+        ("Transit Depth (Observed)", result.get("observed_depth") or result.get("depth"), result.get("observed_depth_uncertainty") or result.get("depth_uncertainty"), "fractional"),
+        ("Transit Depth (Corrected)", result.get("corrected_depth"), result.get("corrected_depth_uncertainty"), "fractional"),
         ("Transit Duration", result.get("duration_days"), result.get("duration_uncertainty_days"), "days"),
         ("Epoch (T₀)", result.get("epoch_btjd"), None, "BTJD"),
+        ("Radius Ratio (Rp/R*)", result.get("rp_rstar"), (result.get("rp_rstar_err_lower"), result.get("rp_rstar_err_upper")), "dimensionless"),
+        ("Observed Transit Count", result.get("observed_transits"), None, "counts"),
+        ("Transit Depth SNR", result.get("snr"), None, "σ"),
+        ("Residual RMS", result.get("residual_rms"), None, "fractional"),
+        ("Red-Noise Beta Factor", result.get("beta_factor"), None, "dimensionless"),
+        ("Contamination Estimate", result.get("features", {}).get("contamination_ratio") or result.get("diagnostics", {}).get("blend", {}).get("contamination_ratio"), None, "dimensionless"),
     ]
     
     html = '<table class="feature-table"><thead><tr><th>Parameter</th><th>Value</th><th>Uncertainty</th><th>Unit</th></tr></thead><tbody>'
     for name, val, unc, unit in params:
         val_str = f"{val:.6f}" if val is not None else "—"
-        unc_str = f"± {unc:.6f}" if unc is not None else "—"
+        if isinstance(unc, tuple):
+            u_l, u_u = unc
+            if u_l is not None and u_u is not None:
+                unc_str = f"+{u_u:.6f} / -{u_l:.6f}"
+            else:
+                unc_str = "—"
+        else:
+            unc_str = f"± {unc:.6f}" if unc is not None else "—"
         html += f'<tr><td><strong>{name}</strong></td><td>{val_str}</td><td>{unc_str}</td><td>{unit}</td></tr>'
     html += '</tbody></table>'
     st.markdown(html, unsafe_allow_html=True)

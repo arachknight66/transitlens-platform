@@ -12,7 +12,7 @@ import streamlit as st
 
 from app import state
 from app.utils import load_config
-from app.pages import home, demo, upload, results, about
+from app.pages import home, results, candidates, evaluation, runs, method
 from app.components import sidebar, header
 
 
@@ -63,10 +63,11 @@ header.render(current_page=state.get_page())
 # ── Task 4 — Page routing ──
 PAGE_ROUTES = {
     "home": home.render,
-    "demo": demo.render,
-    "upload": upload.render,
+    "candidates": candidates.render,
+    "evaluation": evaluation.render,
+    "runs": runs.render,
+    "method": method.render,
     "results": results.render,
-    "about": about.render,
 }
 
 current_page = state.get_page()
