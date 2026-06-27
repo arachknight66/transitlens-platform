@@ -36,16 +36,13 @@ def render():
         st.markdown("### Classification Accuracy")
         
         # Display split summaries
-        cols = st.columns(3)
+        cols = st.columns(2)
         with cols[0]:
             val_acc = metrics_data.get("val_metrics", {}).get("accuracy", 0.0)
             st.metric("Validation Split Accuracy", f"{val_acc * 100:.1f}%", help="Calculated on disjoint validation target list")
         with cols[1]:
             test_acc = metrics_data.get("test_metrics", {}).get("accuracy", 0.0)
             st.metric("Blind Test Split Accuracy", f"{test_acc * 100:.1f}%", help="Calculated on blind test split targets")
-        with cols[2]:
-            gold_acc = metrics_data.get("gold_metrics", {}).get("accuracy", 0.0)
-            st.metric("Curated Gold Set Accuracy", f"{gold_acc * 100:.1f}%", help="Calculated on 12 reference targets (3 per class)")
 
         st.write("")
         
