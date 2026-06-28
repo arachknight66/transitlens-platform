@@ -178,6 +178,21 @@ async function syntheticStreamFallback(
   return fallback;
 }
 
+export async function loadLightCurve(
+  targetId: string
+): Promise<{ time: number[]; flux: number[] } | null> {
+  const match = targetId.match(/^candidate_([abc])$/);
+  if (!match) return null;
+
+  try {
+    const { loadDemoCandidateCsv } = await import("./parseLightCurve");
+    const parsed = await loadDemoCandidateCsv(match[1] as "a" | "b" | "c");
+    return { time: parsed.time, flux: parsed.flux };
+  } catch {
+    return null;
+  }
+}
+
 export async function loadFallback(targetId: string): Promise<AnalysisResult | null> {
   try {
     let metadata: Partial<AnalysisResult> | undefined;
@@ -198,6 +213,8 @@ export async function loadFallback(targetId: string): Promise<AnalysisResult | n
       return null;
     }
 
+    const lc = await loadLightCurve(targetId);
+
     const plotsRes = await fetch(`/demo_data/${targetId}_plots.json`);
     const plots = plotsRes.ok
       ? ((await plotsRes.json()) as AnalysisResult["plots"])
@@ -206,6 +223,8 @@ export async function loadFallback(targetId: string): Promise<AnalysisResult | n
     return {
       ...metadata,
       plots: { ...plots, ...(metadata.plots ?? {}) },
+      raw_time: lc?.time ?? metadata.raw_time,
+      raw_flux: lc?.flux ?? metadata.raw_flux,
     } as AnalysisResult;
   } catch {
     return null;

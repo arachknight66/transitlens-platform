@@ -24,6 +24,7 @@ export function ClassBadge({ predictedClass, size = "md" }: Props) {
       initial={{ scale: 0.85, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: "spring", stiffness: 400, damping: 20 }}
+      aria-label={`Classification: ${cfg.display}`}
     >
       {cfg.display}
     </motion.span>

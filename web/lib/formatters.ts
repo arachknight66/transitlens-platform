@@ -17,3 +17,24 @@ export function formatDuration(duration: number | null | undefined): string {
 export function formatConfidence(confidence: number): string {
   return `${Math.round(confidence * 100)}%`;
 }
+
+export function formatUncertainty(
+  errUpper?: number | null,
+  errLower?: number | null,
+  errSym?: number | null
+): string | null {
+  if (errUpper != null && errLower != null) {
+    return `+${formatErr(errUpper)} / −${formatErr(errLower)}`;
+  }
+  if (errSym != null) {
+    return `±${formatErr(errSym)}`;
+  }
+  return null;
+}
+
+function formatErr(v: number): string {
+  if (v === 0) return "0";
+  if (Math.abs(v) >= 1) return v.toFixed(2);
+  if (Math.abs(v) >= 0.01) return v.toFixed(4);
+  return v.toExponential(1);
+}

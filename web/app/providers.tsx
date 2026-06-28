@@ -1,5 +1,7 @@
 "use client";
 
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <ErrorBoundary>{children}</ErrorBoundary>;
 }

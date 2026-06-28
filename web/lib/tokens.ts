@@ -1,20 +1,26 @@
+import { ds, statusColor as dsStatusColor } from "./design-tokens";
+
+/** @deprecated Import from `@/lib/design-tokens` instead. */
 export const tokens = {
   colors: {
-    planet: "#3C3489",
-    binary: "#712B13",
-    blend: "#D48B00",
-    noise: "#444441",
-    primary: "#534AB7",
-    bgDark: "#0E1117",
-    bgCard: "#1A1A2E",
-    textPrimary: "#FAFAFA",
-    textSecondary: "#AAAAAA",
-    textMuted: "#888888",
+    planet: ds.cls.planet.badge,
+    binary: ds.cls.binary.badge,
+    blend: ds.cls.blend.badge,
+    noise: ds.cls.noise.badge,
+    primary: ds.brand.mid,
+    bgDark: ds.bg.base,
+    bgCard: ds.bg.elevated,
+    textPrimary: ds.text.primary,
+    textSecondary: ds.text.secondary,
+    textMuted: ds.text.muted,
   },
   status: {
-    green: "#4CAF50",
-    amber: "#D48B00",
-    red: "#FF6B6B",
+    green: ds.status.ok,
+    amber: ds.status.warn,
+    red: ds.status.error,
+    ok: ds.status.ok,
+    warn: ds.status.warn,
+    error: ds.status.error,
   },
   radius: {
     sm: "4px",
@@ -40,9 +46,5 @@ export const tokens = {
   },
 } as const;
 
-export function statusColor(value: number | null, lo: number, hi: number): string {
-  if (value === null) return "#888888";
-  if (value >= hi) return tokens.status.green;
-  if (value >= lo) return tokens.status.amber;
-  return tokens.status.red;
-}
+export { ds };
+export const statusColor = dsStatusColor;

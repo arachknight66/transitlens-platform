@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import { ds } from "./lib/design-tokens";
 
 const config: Config = {
   content: [
@@ -8,45 +9,96 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        planet: "#3C3489",
-        binary: "#712B13",
-        blend: "#D48B00",
-        noise: "#444441",
-        primary: "#534AB7",
-        "bg-dark": "#0E1117",
-        "bg-card": "#1A1A2E",
-        "text-primary": "#FAFAFA",
-        "text-secondary": "#AAAAAA",
-        "text-muted": "#888888",
-        "status-green": "#4CAF50",
-        "status-amber": "#D48B00",
-        "status-red": "#FF6B6B",
+        "bg-void": ds.bg.void,
+        "bg-base": ds.bg.base,
+        "bg-surface": ds.bg.surface,
+        "bg-elevated": ds.bg.elevated,
+        "bg-overlay": ds.bg.overlay,
+        "bg-dark": ds.bg.base,
+        "bg-card": ds.bg.elevated,
+
+        brand: ds.brand.mid,
+        "brand-deep": ds.brand.deep,
+        "brand-core": ds.brand.core,
+        "brand-light": ds.brand.light,
+        "brand-ghost": ds.brand.ghost,
+        primary: ds.brand.mid,
+
+        "cls-planet-bg": ds.cls.planet.bg,
+        "cls-planet-border": ds.cls.planet.border,
+        "cls-planet-text": ds.cls.planet.text,
+        "cls-binary-bg": ds.cls.binary.bg,
+        "cls-binary-border": ds.cls.binary.border,
+        "cls-binary-text": ds.cls.binary.text,
+        "cls-blend-bg": ds.cls.blend.bg,
+        "cls-blend-border": ds.cls.blend.border,
+        "cls-blend-text": ds.cls.blend.text,
+        "cls-noise-bg": ds.cls.noise.bg,
+        "cls-noise-border": ds.cls.noise.border,
+        "cls-noise-text": ds.cls.noise.text,
+
+        planet: ds.cls.planet.badge,
+        binary: ds.cls.binary.badge,
+        blend: ds.cls.blend.badge,
+        noise: ds.cls.noise.badge,
+
+        "status-ok": ds.status.ok,
+        "status-warn": ds.status.warn,
+        "status-error": ds.status.error,
+        "status-info": ds.status.info,
+        "status-green": ds.status.ok,
+        "status-amber": ds.status.warn,
+        "status-red": ds.status.error,
+
+        "text-primary": ds.text.primary,
+        "text-secondary": ds.text.secondary,
+        "text-muted": ds.text.muted,
+
+        "border-subtle": ds.border.subtle,
+        "border-soft": ds.border.soft,
+        "border-strong": ds.border.strong,
       },
-      fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        mono: ["JetBrains Mono", "Fira Code", "monospace"],
+      fontSize: {
+        "2xs": ["10px", { lineHeight: "1.4" }],
+        xs: ["11px", { lineHeight: "1.4" }],
+        sm: ["12px", { lineHeight: "1.5" }],
+        base: ["13px", { lineHeight: "1.6" }],
+        md: ["14px", { lineHeight: "1.6" }],
+        lg: ["16px", { lineHeight: "1.5" }],
+        xl: ["20px", { lineHeight: "1.4" }],
+        "2xl": ["24px", { lineHeight: "1.3" }],
+        "3xl": ["32px", { lineHeight: "1.2" }],
+        caption: ["11px", { lineHeight: "1.4" }],
+        body: ["13px", { lineHeight: "1.6" }],
+        ui: ["14px", { lineHeight: "1.6" }],
+        heading: ["16px", { lineHeight: "1.5" }],
+        "heading-xl": ["20px", { lineHeight: "1.4" }],
+        display: ["32px", { lineHeight: "1.2" }],
       },
       borderRadius: {
+        xs: "2px",
         sm: "4px",
         md: "8px",
         lg: "12px",
-        pill: "999px",
+        xl: "16px",
+        full: "9999px",
+        pill: "9999px",
       },
-      spacing: {
-        xs: "4px",
-        sm: "8px",
-        md: "16px",
-        lg: "24px",
-        xl: "40px",
-        xxl: "64px",
+      fontFamily: {
+        sans: ["Inter", "-apple-system", "sans-serif"],
+        mono: ["JetBrains Mono", "Fira Code", "monospace"],
       },
-      fontSize: {
-        caption: "11px",
-        body: "13px",
-        ui: "14px",
-        heading: "16px",
-        "heading-xl": "20px",
-        display: "32px",
+      boxShadow: {
+        "glow-brand": `0 0 24px ${ds.brand.glow}`,
+        "glow-ok": "0 0 16px rgba(76,175,80,0.3)",
+        card: "0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3)",
+        "card-hover": "0 4px 16px rgba(0,0,0,0.5)",
+      },
+      transitionDuration: {
+        fast: "150ms",
+      },
+      transitionTimingFunction: {
+        snap: ds.easing.snap,
       },
       animation: {
         shimmer: "shimmer 2s infinite",
@@ -64,11 +116,12 @@ const config: Config = {
         },
         barGrow: {
           "0%": { width: "0%" },
-          "100%": { width: "100%" },
+          "100%": { width: "var(--bar-w, 100%)" },
         },
       },
     },
   },
   plugins: [],
 };
+
 export default config;

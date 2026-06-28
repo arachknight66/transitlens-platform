@@ -1,7 +1,8 @@
 "use client";
+
+import { useRef, useEffect, useState } from "react";
 import { useMotionValue, animate } from "framer-motion";
-import { useEffect, useState } from "react";
-import { statusColor } from "@/lib/tokens";
+import { statusColor } from "@/lib/design-tokens";
 import type { AnalysisResult } from "@/types/analysis";
 
 interface Props {
@@ -15,7 +16,7 @@ function AnimatedNumber({
   target: number;
   format?: (n: number) => string;
 }) {
-  const motionValue = useMotionValue(0);
+  const motionValue = useRef(useMotionValue(0)).current;
   const [display, setDisplay] = useState(format ? format(0) : "0");
 
   useEffect(() => {
@@ -45,20 +46,20 @@ export function ConfidenceTriple({ result }: Props) {
   const countColor = statusColor(transitCount, 2, 3);
 
   return (
-    <div className="confidence-triplet flex items-center gap-6">
+    <div className="confidence-triplet flex items-center gap-6 tabular-nums">
       <div className="confidence-value-block text-center">
         <div
           className="status-dot-sm mx-auto mb-1 h-1.5 w-1.5 rounded-full"
           style={{ backgroundColor: snrColor }}
         />
-        <div className="value text-display font-semibold leading-none text-text-primary">
+        <div className="value text-3xl font-semibold leading-none text-text-primary">
           {snr != null ? (
             <AnimatedNumber target={snr} format={(n) => n.toFixed(1)} />
           ) : (
             "—"
           )}
         </div>
-        <div className="unit mt-1 text-caption uppercase tracking-wider text-text-muted">
+        <div className="unit mt-1 text-xs uppercase tracking-wider text-text-muted">
           Detection SNR
         </div>
       </div>
@@ -70,11 +71,11 @@ export function ConfidenceTriple({ result }: Props) {
           className="status-dot-sm mx-auto mb-1 h-1.5 w-1.5 rounded-full"
           style={{ backgroundColor: confColor }}
         />
-        <div className="value text-display font-semibold leading-none text-text-primary">
+        <div className="value text-3xl font-semibold leading-none text-text-primary">
           <AnimatedNumber target={confidencePct} format={(n) => Math.round(n).toString()} />
-          <span className="ml-0.5 text-heading font-normal text-text-muted">%</span>
+          <span className="ml-0.5 text-lg font-normal text-text-muted">%</span>
         </div>
-        <div className="unit mt-1 text-caption uppercase tracking-wider text-text-muted">
+        <div className="unit mt-1 text-xs uppercase tracking-wider text-text-muted">
           Classifier confidence
         </div>
       </div>
@@ -86,14 +87,14 @@ export function ConfidenceTriple({ result }: Props) {
           className="status-dot-sm mx-auto mb-1 h-1.5 w-1.5 rounded-full"
           style={{ backgroundColor: countColor }}
         />
-        <div className="value text-display font-semibold leading-none text-text-primary">
+        <div className="value text-3xl font-semibold leading-none text-text-primary">
           {transitCount != null ? (
             <AnimatedNumber target={transitCount} />
           ) : (
             "—"
           )}
         </div>
-        <div className="unit mt-1 text-caption uppercase tracking-wider text-text-muted">
+        <div className="unit mt-1 text-xs uppercase tracking-wider text-text-muted">
           Transit count
         </div>
       </div>

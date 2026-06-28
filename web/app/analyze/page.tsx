@@ -1,9 +1,13 @@
 "use client";
+
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { CandidateCard } from "@/components/CandidateCard";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { ProgressStream } from "@/components/ProgressStream";
+import {
+  AnalysisWorkspace,
+  type RunPayload,
+} from "@/components/workspace/AnalysisWorkspace";
 import { useTransitStore } from "@/lib/store";
 import type { AnalysisResult } from "@/types/analysis";
 
@@ -14,46 +18,45 @@ export default function AnalyzePage() {
   const setAnalysisRunning = useTransitStore((s) => s.setAnalysisRunning);
   const setUsingFallback = useTransitStore((s) => s.setUsingFallback);
 
-  const [analyzing, setAnalyzing] = useState(false);
-  const [activeTargetId, setActiveTargetId] = useState<string | null>(null);
+  const [runState, setRunState] = useState<RunPayload | null>(null);
 
-  const handleCandidateSelect = (id: "a" | "b" | "c") => {
-    setSelectedCandidate(id);
-    setActiveTargetId(`candidate_${id}`);
+  const handleRun = (payload: RunPayload) => {
+    if (payload.sourceMode === "demo") {
+      const match = payload.targetId.match(/^candidate_([abc])$/);
+      if (match) setSelectedCandidate(match[1] as "a" | "b" | "c");
+    } else {
+      setSelectedCandidate(null);
+    }
     setAnalysisRunning(true);
-    setAnalyzing(true);
+    setRunState(payload);
   };
 
-  const handleAnalysisComplete = useCallback(
+  const handleComplete = useCallback(
     (result: AnalysisResult) => {
       setResult(result);
       setAnalysisRunning(false);
       setUsingFallback(true);
-      setAnalyzing(false);
+      setRunState(null);
       router.push(`/results/${result.target_id}`);
     },
     [router, setAnalysisRunning, setResult, setUsingFallback]
   );
 
-  if (analyzing && activeTargetId) {
+  if (runState) {
     return (
       <div className="p-8">
-        <div className="mx-auto max-w-2xl">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <h1 className="text-heading-xl font-bold text-text-primary">Running Analysis</h1>
-            <p className="mt-2 text-body text-text-secondary">
-              Please wait while we process {activeTargetId.replace("_", " ")}...
-            </p>
-          </motion.div>
-
+        <div className="mx-auto max-w-4xl">
+          <PageHeader
+            title="Running Analysis"
+            subtitle={`Processing ${runState.targetId.replace(/_/g, " ")}…`}
+          />
           <ProgressStream
-            key={activeTargetId}
-            onComplete={handleAnalysisComplete}
-            targetId={activeTargetId}
+            key={`${runState.targetId}-${JSON.stringify(runState.configOverride)}`}
+            targetId={runState.targetId}
+            timeArr={runState.time}
+            fluxArr={runState.flux}
+            configOverride={runState.configOverride}
+            onComplete={handleComplete}
           />
         </div>
       </div>
@@ -63,23 +66,11 @@ export default function AnalyzePage() {
   return (
     <div className="p-8">
       <div className="mx-auto max-w-6xl">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-12"
-        >
-          <h1 className="text-heading-xl font-bold text-text-primary">Analysis Workspace</h1>
-          <p className="mt-2 text-body text-text-secondary">
-            Configure and execute exoplanet detection, transit fitting, and classification
-            pipeline.
-          </p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <CandidateCard candidateId="a" onClick={() => handleCandidateSelect("a")} />
-          <CandidateCard candidateId="b" onClick={() => handleCandidateSelect("b")} />
-          <CandidateCard candidateId="c" onClick={() => handleCandidateSelect("c")} />
-        </div>
+        <PageHeader
+          title="Analysis Workspace"
+          subtitle="Configure and execute exoplanet detection, transit fitting, and classification pipeline."
+        />
+        <AnalysisWorkspace onRun={handleRun} />
       </div>
     </div>
   );

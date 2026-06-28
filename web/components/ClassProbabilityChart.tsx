@@ -29,8 +29,13 @@ export function ClassProbabilityChart({ probabilities }: Props) {
             </div>
             <div className="h-4 overflow-hidden rounded-sm bg-white/5">
               <div
-                className="feature-bar h-full rounded-sm transition-all duration-300"
-                style={{ width: `${pct}%`, backgroundColor: cfg.colorHex }}
+                className="feature-bar h-full rounded-sm"
+                style={
+                  {
+                    "--bar-w": `${pct}%`,
+                    backgroundColor: cfg.colorHex,
+                  } as React.CSSProperties
+                }
               />
             </div>
           </div>

@@ -1,0 +1,9 @@
+scenario,injections,recovered,recovery_rate,false_positives,fap_threshold
+Shallow transits (0.05-0.2%),240,142,0.592,18,0.01
+Medium transits (0.2-1.0%),240,208,0.867,12,0.01
+Deep transits (>1.0%),240,231,0.963,8,0.01
+Short period (0.5-2 d),160,145,0.906,6,0.01
+Medium period (2-10 d),160,148,0.925,5,0.01
+Long period (10-27 d),160,132,0.825,11,0.01
+High noise (SNR 5-7),120,89,0.742,14,0.01
+Low noise (SNR >10),120,115,0.958,3,0.01

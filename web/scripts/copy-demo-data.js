@@ -16,6 +16,9 @@ if (fs.existsSync(sourceDir)) {
     if (/^candidate_[abc]_plots\.json$/.test(entry)) {
       fs.copyFileSync(path.join(sourceDir, entry), path.join(targetDir, entry));
     }
+    if (/^candidate_[abc]\.csv$/.test(entry)) {
+      fs.copyFileSync(path.join(sourceDir, entry), path.join(targetDir, entry));
+    }
   }
 
   console.log("Copied demo_data to web/public/demo_data");
