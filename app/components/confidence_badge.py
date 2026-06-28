@@ -1,17 +1,10 @@
 """Coloured class badge with confidence percentage."""
 import streamlit as st
-from app.utils import class_display_name, class_emoji
-
-COLOR_MAP = {
-    "exoplanet_transit": "#3C3489",
-    "eclipsing_binary": "#712B13",
-    "blend_contamination": "#D48B00",
-    "stellar_variability_or_other": "#444441",
-}
+from app.utils import class_display_name, class_emoji, get_class_color_hex
 
 def render(predicted_class: str, confidence: float):
     """Render a coloured pill with class name, emoji, and confidence."""
-    color = COLOR_MAP.get(predicted_class, "#444441")
+    color = get_class_color_hex(predicted_class)
     name = class_display_name(predicted_class)
     emoji = class_emoji(predicted_class)
     conf_pct = int(confidence * 100)

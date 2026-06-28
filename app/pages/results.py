@@ -3,31 +3,50 @@ import streamlit as st
 from app import state
 from app.components import (result_card, parameter_panel, plot_raw, 
                            plot_cleaned, plot_periodogram, plot_phase_folded, 
-                           feature_table)
+                           feature_table, confidence_triplet)
+from app.utils import get_class_config, get_class_color_hex, class_display_name
 from export import generate_html, generate_csv, generate_pdf
 
 def render():
     result = state.get_result()
     
-    # 1. Result card
-    result_card.render(result)
-    
     if not result:
+        result_card.render(result)
         return
-        
-    # 2. Parameter panel
+    
+    # Show skeleton loading states if analysis is still running
+    if state.get_analysis_running():
+        result_card.render_skeleton()
+        parameter_panel.render_skeleton()
+        c1, c2 = st.columns(2)
+        with c1:
+            plot_phase_folded.render_skeleton()
+        with c2:
+            plot_raw.render_skeleton()
+        st.stop()
+    
+    # Wrap entire content in page-content div for animations
+    st.markdown('<div class="page-content">', unsafe_allow_html=True)
+    
+    # ── Section 1: Hero verdict bar (full width) ──────────────────────────────
+    _render_hero_verdict_bar(result)
+    
+    # ── Section 2: Two-column hero ──────────────────────────────────────────
+    _render_hero_section(result)
+    
+    st.write("")
+    
+    # ── Section 3: Parameter strip ──────────────────────────────────────────
     parameter_panel.render(result)
     
-    st.write("---")
+    st.write("")
     
-    # 3. Scientific tabs
-    tab_overview, tab_detection, tab_fit, tab_blend, tab_export = st.tabs([
-        "📊 Overview", "🔍 Detection", "📐 Fit Parameters", 
-        "👥 Blend Diagnostics", "📦 Export"
+    # ── Section 4: Three tabs ──────────────────────────────────────────
+    tab_detection, tab_fit, tab_blend = st.tabs([
+        "🔍 Detection evidence",
+        "📐 Fit parameters",
+        "👥 Blend diagnostics"
     ])
-    
-    with tab_overview:
-        _render_overview_tab(result)
     
     with tab_detection:
         _render_detection_tab(result)
@@ -38,50 +57,110 @@ def render():
     with tab_blend:
         _render_blend_tab(result)
     
-    with tab_export:
-        _render_export_tab(result)
+    st.write("")
+    
+    # ── Section 5: Secondary plot row ──────────────────────────────────────
+    _render_secondary_plots(result)
+    
+    st.write("")
+    
+    # ── Section 6: Export strip ────────────────────────────────────────────
+    _render_export_tab(result)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
-def _render_overview_tab(result):
-    """Overview tab with plots and classification reasoning."""
+def _render_hero_verdict_bar(result: dict) -> None:
+    """Render the hero verdict bar with target ID, class badge, and confidence triplet."""
+    target_id = result.get("target_id", "Target")
+    predicted_class = result.get("predicted_class", "stellar_variability_or_other")
+    cfg = get_class_config(predicted_class)
+    using_fallback = state.get_using_fallback() if hasattr(state, 'get_using_fallback') else False
     
-    # Class probabilities bar
-    class_probs = result.get("class_probabilities", {})
-    if class_probs:
-        st.markdown("#### Class Probabilities")
-        _render_class_probability_chart(class_probs)
-        st.write("")
+    badge_label = f"{cfg['display']}"
+    cached_badge = '<span style="font-size:var(--font-caption);color:var(--text-muted);margin-left:4px;">(cached)</span>' if using_fallback else ''
     
-    # Plot grid
-    st.markdown("#### Diagnostic Plots")
-    plot_cols1 = st.columns(2)
-    with plot_cols1[0]:
-        st.markdown("<div class='plot-container'>", unsafe_allow_html=True)
-        plot_raw.render(result)
-        st.markdown("</div>", unsafe_allow_html=True)
-    with plot_cols1[1]:
-        st.markdown("<div class='plot-container'>", unsafe_allow_html=True)
-        plot_cleaned.render(result)
-        st.markdown("</div>", unsafe_allow_html=True)
-        
-    plot_cols2 = st.columns(2)
-    with plot_cols2[0]:
-        st.markdown("<div class='plot-container'>", unsafe_allow_html=True)
-        plot_periodogram.render(result)
-        st.markdown("</div>", unsafe_allow_html=True)
-    with plot_cols2[1]:
-        st.markdown("<div class='plot-container'>", unsafe_allow_html=True)
+    html = f"""
+    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--primary-ultra-light);
+                border-radius:var(--radius-lg);padding:var(--space-lg);border:1px solid rgba(83,74,183,0.12);
+                margin-bottom:var(--space-lg);">
+      <div style="font-size:var(--font-heading);font-weight:600;color:var(--text-primary);">
+        {target_id}{cached_badge}
+      </div>
+      <div style="background:{cfg['color_hex']};color:#fff;padding:6px 16px;border-radius:var(--radius-pill);
+                  font-size:var(--font-body);font-weight:500;">{badge_label}</div>
+      <div style=""></div>
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def _render_hero_section(result: dict) -> None:
+    """Render two-column hero with plots and explanation."""
+    col_left, col_right = st.columns([3, 2])
+    
+    # Left: phase-folded plot
+    with col_left:
         plot_phase_folded.render(result)
-        st.markdown("</div>", unsafe_allow_html=True)
+        period = result.get("period_days")
+        if period:
+            st.caption(f"Period: {period:.4f} days")
+    
+    # Right: class probability + explanation
+    with col_right:
+        # Class probabilities bar
+        class_probs = result.get("class_probabilities", {})
+        if class_probs:
+            st.markdown("**Classification probabilities**")
+            _render_class_probability_chart(class_probs)
+            st.write("")
         
-    # Explanation
-    st.markdown("#### Classification Reasoning")
-    st.markdown(f'<div class="explanation-box">{result.get("explanation", "")}</div>', unsafe_allow_html=True)
+        # Explanation with expander
+        explanation = result.get("explanation", "")
+        if explanation:
+            st.markdown("**Classification reasoning**")
+            preview = explanation[:200] + "..." if len(explanation) > 200 else explanation
+            st.markdown(f'<div class="explanation-box">{preview}</div>', unsafe_allow_html=True)
+            
+            if len(explanation) > 200:
+                with st.expander("Read full reasoning"):
+                    st.markdown(explanation)
+
+
+def _render_secondary_plots(result: dict) -> None:
+    """Render secondary plot row (raw, cleaned, periodogram, transit stack)."""
+    st.markdown("#### Diagnostic Plots")
+    
+    # First row: raw and cleaned lightcurves
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("##### Raw Lightcurve")
+        plot_raw.render(result)
+    with col2:
+        st.markdown("##### Cleaned Lightcurve")
+        plot_cleaned.render(result)
+    
+    # Second row: periodogram and transit stack (if available)
+    col3, col4 = st.columns(2)
+    with col3:
+        st.markdown("##### Periodogram")
+        plot_periodogram.render(result)
+    with col4:
+        plots = result.get("plots", {})
+        if plots.get("transit_stack"):
+            st.markdown("##### Transit Stack")
+            from app.utils import decode_plot
+            img = decode_plot(plots["transit_stack"])
+            st.image(img, use_container_width=True)
+        else:
+            st.markdown("##### —")
+            st.info("Transit stack plot not available")
 
 
 def _render_detection_tab(result):
     """Detection evidence tab with features and classification path."""
     det_cols = st.columns(2)
+    
     with det_cols[0]:
         st.markdown("#### Extracted Features")
         feature_table.render(result)
@@ -89,6 +168,11 @@ def _render_detection_tab(result):
     with det_cols[1]:
         st.markdown("#### Classification Path")
         _render_classification_path(result)
+
+
+def _render_overview_tab(result):
+    """Removed — functionality moved to main layout."""
+    pass
 
 
 def _render_fit_tab(result):

@@ -64,3 +64,11 @@ def render(result: dict = None):
         st.metric("Review Requirement", val, help="Urgency of human review/vetting based on OOD/warnings")
         
     st.write("")
+
+
+def render_skeleton() -> None:
+    """Render a shimmer placeholder matching the result card dimensions."""
+    st.markdown(
+        '<div class="skeleton" style="height:64px;width:100%;margin-bottom:16px;"></div>',
+        unsafe_allow_html=True,
+    )

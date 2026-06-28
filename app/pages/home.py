@@ -6,6 +6,58 @@ import numpy as np
 from app import state, api_client
 from app.utils import load_csv, InvalidCSVError
 
+# Candidate sparklines
+SPARKLINE_A = """
+<svg viewBox="0 0 120 40" width="120" height="40" xmlns="http://www.w3.org/2000/svg">
+  <polyline
+    points="0,12 10,12 12,12 14,22 18,28 22,22 24,12 40,12 42,12 44,22 48,28 52,22 54,12 70,12 72,12 74,22 78,28 82,22 84,12 100,12 102,12 104,22 108,28 112,22 114,12 120,12"
+    fill="none" stroke="rgba(138,129,242,0.7)" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>
+"""
+
+SPARKLINE_B = """
+<svg viewBox="0 0 120 40" width="120" height="40" xmlns="http://www.w3.org/2000/svg">
+  <polyline
+    points="0,8 15,8 20,8 30,36 40,8 55,8 60,8 70,36 80,8 95,8 100,8 110,36 120,8"
+    fill="none" stroke="rgba(180,80,60,0.7)" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>
+"""
+
+SPARKLINE_C = """
+<svg viewBox="0 0 120 40" width="120" height="40" xmlns="http://www.w3.org/2000/svg">
+  <polyline
+    points="0,18 5,14 10,20 15,16 20,22 25,19 30,24 35,17 40,21 45,15 50,23 55,20 60,25 65,18 70,22 75,16 80,20 85,24 90,19 95,22 100,17 105,21 110,18 115,23 120,20"
+    fill="none" stroke="rgba(136,135,128,0.7)" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>
+"""
+
+CANDIDATE_CARDS = [
+    {
+        "id": "candidate_a",
+        "name": "Candidate A",
+        "expected": "exoplanet_transit",
+        "desc": "Shallow 1.3% transit candidate (Exoplanet Transit)",
+        "sparkline": SPARKLINE_A,
+        "accent": "var(--class-planet)",
+    },
+    {
+        "id": "candidate_b",
+        "name": "Candidate B",
+        "expected": "eclipsing_binary",
+        "desc": "Deep 18% primary + secondary eclipses (Eclipsing Binary)",
+        "sparkline": SPARKLINE_B,
+        "accent": "var(--class-binary)",
+    },
+    {
+        "id": "candidate_c",
+        "name": "Candidate C",
+        "expected": "stellar_variability_or_other",
+        "desc": "Pure stellar variability and red noise (Variability / Other)",
+        "sparkline": SPARKLINE_C,
+        "accent": "var(--class-noise)",
+    },
+]
+
 def render():
     st.markdown("## 🔭 Analysis Workspace")
     st.markdown("Configure and execute exoplanet detection, transit fitting, and classification pipeline.")
@@ -24,18 +76,30 @@ def render():
 
     if source_mode == "Bundled Demonstration Targets":
         st.markdown("Select a predefined candidate case:")
-        candidates = [
-            ("candidate_a", "🪐 Candidate A", "Shallow 1.3% transit candidate (Exoplanet Transit)"),
-            ("candidate_b", "⭐ Candidate B", "Deep 18% primary + secondary eclipses (Eclipsing Binary)"),
-            ("candidate_c", "📊 Candidate C", "Pure stellar variability and red noise (Variability / Other)"),
-        ]
         
         cols = st.columns(3)
-        for idx, (cid, label, desc) in enumerate(candidates):
+        for idx, card in enumerate(CANDIDATE_CARDS):
             with cols[idx]:
-                if st.button(f"{label}\n\n{desc}", key=f"bundled_btn_{cid}", use_container_width=True):
-                    st.session_state["selected_candidate"] = cid
-                    
+                html = f"""
+                <div style="border:1px solid rgba(255,255,255,0.08);border-left:4px solid {card['accent']};
+                            border-radius:var(--radius-lg);padding:var(--space-md);margin-bottom:var(--space-md);
+                            background:var(--bg-card);">
+                  {card['sparkline']}
+                  <div style="margin-top:var(--space-sm);margin-bottom:var(--space-md);">
+                    <div style="font-weight:600;font-size:var(--font-heading);color:var(--text-primary);margin-bottom:4px;">
+                      {card['name']}
+                    </div>
+                    <div style="font-size:var(--font-body);color:var(--text-secondary);line-height:1.4;">
+                      {card['desc']}
+                    </div>
+                  </div>
+                </div>
+                """
+                st.markdown(html, unsafe_allow_html=True)
+                
+                if st.button(f"Select {card['name']}", key=f"bundled_btn_{card['id']}", use_container_width=True):
+                    st.session_state["selected_candidate"] = card['id']
+                
         curr_cid = st.session_state.get("selected_candidate")
         if curr_cid:
             st.success(f"Selected: **{curr_cid.replace('_', ' ').capitalize()}**")
@@ -127,47 +191,42 @@ def _execute_pipeline(source_mode, target_id, time_arr, flux_arr, file_uploaded,
     progress_bar = st.progress(0)
     status_text = st.empty()
 
-    steps = [
-        (10, "1. Loading target dataset..."),
-        (25, "2. Preprocessing: outlier removal and detrending..."),
-        (45, "3. Searching for periodic dips via BLS..."),
-        (60, "4. Extracting 16 physical signal features..."),
-        (75, "5. Running classifier model & rules..."),
-        (90, "6. Fitting transit shape parameters & uncertainties..."),
-        (100, "7. Generating diagnostic plots & evidence pack...")
-    ]
+    result = None
 
     try:
-        # Step progress representation
-        for pct, msg in steps[:4]:
-            progress_bar.progress(pct)
-            status_text.text(msg)
-            time.sleep(0.3)
-
-        result = None
         if source_mode == "Bundled Demonstration Targets":
-            result = api_client.analyze(time_arr, flux_arr, target_id=target_id, config_override=config_override)
+            for event in api_client.analyze_streaming(time_arr, flux_arr, target_id=target_id, config_override=config_override):
+                progress_bar.progress(min(100, event["pct"]) / 100)
+                status_text.text(event["msg"])
+                if "result" in event:
+                    result = event["result"]
         elif source_mode == "TESS Target Identifier (MAST)":
             clean_id = target_id.replace("TIC-", "").strip()
             # Clean numeric extraction
             clean_id = "".join(filter(str.isdigit, clean_id))
-            result = api_client.analyze_tess(clean_id)
+            for event in api_client.analyze_streaming(None, None, target_id=clean_id, metadata={"source": "tess_mast"}):
+                progress_bar.progress(min(100, event["pct"]) / 100)
+                status_text.text(event["msg"])
+                if "result" in event:
+                    result = event["result"]
         else:
             if file_uploaded.name.lower().endswith('.csv'):
                 t_arr, f_arr = load_csv(file_uploaded)
-                result = api_client.analyze(t_arr, f_arr, target_id=target_id, config_override=config_override)
+                for event in api_client.analyze_streaming(t_arr, f_arr, target_id=target_id, config_override=config_override):
+                    progress_bar.progress(min(100, event["pct"]) / 100)
+                    status_text.text(event["msg"])
+                    if "result" in event:
+                        result = event["result"]
             else:
-                result = api_client.analyze_file(file_uploaded, target_id=target_id)
-
-        for pct, msg in steps[4:]:
-            progress_bar.progress(pct)
-            status_text.text(msg)
-            time.sleep(0.3)
+                st.error("File upload for non-CSV not yet supported in streaming mode.")
+                return
 
         if result:
             state.set_result(result)
             state.set_page("results")
             st.rerun()
+        else:
+            st.error("Analysis completed but no result returned.")
 
     except InvalidCSVError as exc:
         st.error(f"Invalid CSV layout: {exc}")

@@ -15,6 +15,69 @@ import streamlit as st
 from app.utils import load_config
 
 
+# ── Lazy-loaded cache for demo data ────────────────────────────────────────────
+
+_METADATA_CACHE: dict | None = None
+_PLOTS_CACHE: dict[str, dict] = {}
+
+
+def _get_demo_data_dir() -> str:
+    """Return the absolute path to the demo_data directory."""
+    return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "demo_data")
+
+
+def _load_metadata() -> dict:
+    """Load the metadata file (with plots removed) on first access."""
+    global _METADATA_CACHE
+    if _METADATA_CACHE is None:
+        path = os.path.join(_get_demo_data_dir(), "sample_metadata.json")
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                _METADATA_CACHE = json.load(f)
+        else:
+            # Fallback: load from monolithic file if split has not been run
+            mono = os.path.join(_get_demo_data_dir(), "sample_results.json")
+            if os.path.exists(mono):
+                with open(mono, "r", encoding="utf-8") as f:
+                    full = json.load(f)
+                _METADATA_CACHE = {k: {kk: vv for kk, vv in v.items() if kk != "plots"}
+                                   for k, v in full.items()}
+            else:
+                _METADATA_CACHE = {}
+    return _METADATA_CACHE
+
+
+def _load_plots(target_id: str) -> dict:
+    """Load plots for a specific target_id on first access."""
+    if target_id not in _PLOTS_CACHE:
+        path = os.path.join(_get_demo_data_dir(), f"{target_id}_plots.json")
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                _PLOTS_CACHE[target_id] = json.load(f)
+        else:
+            # Fallback: extract from monolithic file
+            mono = os.path.join(_get_demo_data_dir(), "sample_results.json")
+            if os.path.exists(mono):
+                with open(mono, "r", encoding="utf-8") as f:
+                    full = json.load(f)
+                _PLOTS_CACHE[target_id] = full.get(target_id, {}).get("plots", {})
+            else:
+                _PLOTS_CACHE[target_id] = {}
+    return _PLOTS_CACHE[target_id]
+
+
+def _load_fallback_result(target_id: str) -> dict | None:
+    """Load a pre-computed result from split demo data files.
+    Returns the result dict for the given target_id, or None if not found.
+    """
+    meta = _load_metadata()
+    if target_id not in meta:
+        return None
+    result = dict(meta[target_id])
+    result["plots"] = _load_plots(target_id)
+    return result
+
+
 class MLCoreUnavailableError(Exception):
     """Raised when ml-core is unreachable and no fallback is available."""
     pass
@@ -24,25 +87,6 @@ def _get_config():
     """Load the mlcore section of config.yaml."""
     config = load_config()
     return config.get("mlcore", {})
-
-
-def _load_fallback_result(target_id: str):
-    """Load a pre-computed result from demo_data/sample_results.json.
-    Returns the result dict for the given target_id, or None if not found.
-    """
-    json_path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "demo_data",
-        "sample_results.json",
-    )
-    if not os.path.exists(json_path):
-        return None
-    try:
-        with open(json_path, "r", encoding="utf-8") as f:
-            all_results = json.load(f)
-        return all_results.get(target_id, None)
-    except (json.JSONDecodeError, IOError):
-        return None
 
 
 def health_check() -> bool:
@@ -145,6 +189,71 @@ def analyze(time_arr, flux_arr, target_id: str, metadata=None, config_override=N
         "No cached results available for this target. "
         "Try the Demo page for pre-computed results."
     )
+
+
+def analyze_streaming(time_arr, flux_arr, target_id: str, metadata=None, config_override=None):
+    """
+    Generator that yields progress event dicts as the analysis runs.
+    Each yielded dict has keys: stage (str), pct (int), msg (str).
+    The final dict additionally has key: result (dict).
+
+    Falls back to synchronous analyze() if SSE endpoint is unavailable.
+    """
+    cfg = _get_config()
+    base_url = cfg.get("base_url", "http://127.0.0.1:8000")
+    timeout = cfg.get("timeout_seconds", 30)
+
+    time_list = time_arr.tolist() if isinstance(time_arr, np.ndarray) else list(time_arr)
+    flux_list = flux_arr.tolist() if isinstance(flux_arr, np.ndarray) else list(flux_arr)
+
+    payload = {
+        "time": time_list,
+        "flux": flux_list,
+        "target_id": target_id,
+        "metadata": metadata,
+    }
+    if config_override:
+        payload["config"] = config_override
+
+    try:
+        with requests.post(
+            f"{base_url}/analyze/stream",
+            json=payload,
+            stream=True,
+            timeout=timeout,
+        ) as resp:
+            if resp.status_code != 200:
+                raise requests.exceptions.ConnectionError(f"HTTP {resp.status_code}")
+
+            result = None
+            for raw_line in resp.iter_lines():
+                if not raw_line:
+                    continue
+                line = raw_line.decode("utf-8") if isinstance(raw_line, bytes) else raw_line
+                if line.startswith("data:"):
+                    event = json.loads(line[5:].strip())
+                    if "result" in event:
+                        result = event["result"]
+                    yield event
+
+            if result is None:
+                raise ValueError("Stream ended without a result")
+
+    except Exception:
+        # SSE not available -- fall back to synchronous call with synthetic events
+        synthetic_steps = [
+            (10,  "preprocessing", "Loading and preprocessing light curve..."),
+            (30,  "bls_search",    "Running BLS period search..."),
+            (55,  "features",      "Extracting 16 diagnostic features..."),
+            (70,  "classify",      "Classifying signal type..."),
+            (85,  "fitting",       "Fitting transit parameters..."),
+            (95,  "plots",         "Generating diagnostic plots..."),
+        ]
+        for pct, stage, msg in synthetic_steps:
+            yield {"pct": pct, "stage": stage, "msg": msg}
+
+        result = analyze(time_arr, flux_arr, target_id, metadata, config_override)
+        yield {"pct": 100, "stage": "complete", "msg": "Analysis complete.", "result": result}
 
 
 def analyze_file(uploaded_file, target_id: str, metadata=None) -> dict:

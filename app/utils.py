@@ -13,6 +13,63 @@ import yaml
 from PIL import Image
 
 
+# ── Class Configuration ────────────────────────────────────────────────────
+
+CLASS_CONFIG: dict[str, dict] = {
+    "exoplanet_transit": {
+        "display":     "Exoplanet Transit",
+        "color_css":   "var(--class-planet)",
+        "color_hex":   "#3C3489",
+        "description": "Planetary transit candidate",
+    },
+    "eclipsing_binary": {
+        "display":     "Eclipsing Binary",
+        "color_css":   "var(--class-binary)",
+        "color_hex":   "#712B13",
+        "description": "Eclipsing stellar binary",
+    },
+    "blend_contamination": {
+        "display":     "Blend / Contamination",
+        "color_css":   "var(--class-blend)",
+        "color_hex":   "#D48B00",
+        "description": "Blend or nearby contaminant",
+    },
+    "stellar_variability_or_other": {
+        "display":     "Stellar Variability / Other",
+        "color_css":   "var(--class-noise)",
+        "color_hex":   "#444441",
+        "description": "Stellar variability or noise",
+    },
+}
+
+# Legacy aliases -- map old strings to canonical keys
+_CLASS_ALIASES: dict[str, str] = {
+    "exoplanet_like":        "exoplanet_transit",
+    "eclipsing_binary_like": "eclipsing_binary",
+    "noise_or_other":        "stellar_variability_or_other",
+}
+
+
+def _resolve_class(class_str: str) -> str:
+    """Return the canonical class key, resolving legacy aliases."""
+    return _CLASS_ALIASES.get(class_str, class_str)
+
+
+def get_class_config(class_str: str) -> dict:
+    """Return the full config dict for a class string."""
+    return CLASS_CONFIG.get(_resolve_class(class_str), CLASS_CONFIG["stellar_variability_or_other"])
+
+
+def get_class_color_hex(class_str: str) -> str:
+    """Return the hex color for a class string."""
+    return get_class_config(class_str)["color_hex"]
+
+
+def get_class_color_css(class_str: str) -> str:
+    """Return the CSS custom property for a class string."""
+    return get_class_config(class_str)["color_css"]
+
+
 class InvalidCSVError(Exception):
     """Raised when a CSV file does not meet the required format."""
     pass
@@ -126,16 +183,7 @@ def load_config(path: str = None) -> dict:
 
 def class_display_name(class_str: str) -> str:
     """Convert internal class string to display-friendly name."""
-    mapping = {
-        "exoplanet_transit": "Exoplanet Transit",
-        "eclipsing_binary": "Eclipsing Binary",
-        "blend_contamination": "Blend / Contamination",
-        "stellar_variability_or_other": "Stellar Variability / Other",
-        "exoplanet_like": "Exoplanet Transit",
-        "eclipsing_binary_like": "Eclipsing Binary",
-        "noise_or_other": "Stellar Variability / Other",
-    }
-    return mapping.get(class_str, class_str)
+    return get_class_config(class_str)["display"]
 
 
 def class_emoji(class_str: str) -> str:

@@ -15,3 +15,11 @@ def render(result: dict):
             st.image(img, use_container_width=True, caption="Phase-folded")
     else:
         st.info("Phase-folded plot not available.")
+
+
+def render_skeleton() -> None:
+    """Render a shimmer placeholder matching the plot dimensions."""
+    st.markdown(
+        '<div class="skeleton" style="height:300px;width:100%;border-radius:var(--radius-md);"></div>',
+        unsafe_allow_html=True,
+    )

@@ -134,3 +134,14 @@ def render(result: dict):
                 st.metric("MCMC Convergence", status_str, delta=f"R̂={rhat:.2f}, ESS={ess}", delta_color="normal" if mcmc_passed else "inverse")
             else:
                 st.metric("MCMC Convergence", "N/A (Quick Mode)")
+
+
+def render_skeleton() -> None:
+    """Render shimmer placeholders for the four metric cards."""
+    cols = st.columns(4)
+    for col in cols:
+        with col:
+            st.markdown(
+                '<div class="skeleton" style="height:80px;border-radius:var(--radius-md);"></div>',
+                unsafe_allow_html=True,
+            )

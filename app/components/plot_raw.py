@@ -12,3 +12,11 @@ def render(result: dict):
         st.image(img, use_container_width=True)
     else:
         st.info("Raw lightcurve plot not available.")
+
+
+def render_skeleton() -> None:
+    """Render a shimmer placeholder matching the plot dimensions."""
+    st.markdown(
+        '<div class="skeleton" style="height:300px;width:100%;border-radius:var(--radius-md);"></div>',
+        unsafe_allow_html=True,
+    )
