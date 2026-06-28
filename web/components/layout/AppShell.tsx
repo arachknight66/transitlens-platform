@@ -5,6 +5,7 @@ import { AnimatePresence } from "framer-motion";
 import { Sidebar } from "./Sidebar";
 import { PageTransition } from "./PageTransition";
 import { CommandPalette } from "./CommandPalette";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -26,7 +27,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           tabIndex={-1}
         >
           <AnimatePresence mode="wait">
-            <PageTransition key={pathname}>{children}</PageTransition>
+            <ErrorBoundary key={pathname}>
+              <PageTransition>{children}</PageTransition>
+            </ErrorBoundary>
           </AnimatePresence>
         </main>
       </div>

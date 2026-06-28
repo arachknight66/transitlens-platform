@@ -14,6 +14,10 @@ import { useTransitStore } from "@/lib/store";
 import { loadFallback } from "@/lib/api";
 import { formatPeriod, formatDepth, formatDuration } from "@/lib/formatters";
 import type { AnalysisResult } from "@/types/analysis";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { AnnotationPanel } from "@/components/results/AnnotationPanel";
+import { ProvenancePanel } from "@/components/results/ProvenancePanel";
+
 
 const PhaseFoldChartV2 = dynamic(
   () =>
@@ -140,12 +144,16 @@ export function ResultsPageContent({ targetId }: Props) {
           <Section index={1}>
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
               <div className="space-y-6">
-                <PhaseFoldChartV2
-                  result={loadedResult}
-                  selectedPeriod={selectedPeriod}
-                  onPeriodChange={handlePeriodChange}
-                />
-                <PeriodogramChart result={loadedResult} />
+                <ErrorBoundary>
+                  <PhaseFoldChartV2
+                    result={loadedResult}
+                    selectedPeriod={selectedPeriod}
+                    onPeriodChange={handlePeriodChange}
+                  />
+                </ErrorBoundary>
+                <ErrorBoundary>
+                  <PeriodogramChart result={loadedResult} />
+                </ErrorBoundary>
               </div>
               <div className="space-y-4">
                 {loadedResult.class_probabilities && (
@@ -190,6 +198,7 @@ export function ResultsPageContent({ targetId }: Props) {
               <ParameterCard
                 label="Transit Depth"
                 value={formatDepth(loadedResult.depth)}
+                errSym={loadedResult.depth_uncertainty}
                 quality="ok"
               />
               <ParameterCard
@@ -214,15 +223,31 @@ export function ResultsPageContent({ targetId }: Props) {
           </Section>
 
           <Section index={3}>
-            <ResultsTabs result={loadedResult} />
+            <ErrorBoundary>
+              <ResultsTabs result={loadedResult} />
+            </ErrorBoundary>
           </Section>
 
           <Section index={4}>
             <h3 className="mb-4 text-lg font-semibold text-text-primary">Diagnostic Plots</h3>
-            <PlotGallery plots={loadedResult.plots ?? {}} />
+            <ErrorBoundary>
+              <PlotGallery plots={loadedResult.plots ?? {}} />
+            </ErrorBoundary>
           </Section>
 
           <Section index={5}>
+            <ErrorBoundary>
+              <AnnotationPanel targetId={targetId} />
+            </ErrorBoundary>
+          </Section>
+
+          <Section index={6}>
+            <ErrorBoundary>
+              <ProvenancePanel result={loadedResult} />
+            </ErrorBoundary>
+          </Section>
+
+          <Section index={7}>
             <ExportStrip result={loadedResult} />
           </Section>
         </div>

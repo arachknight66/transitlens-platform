@@ -5,13 +5,15 @@ import { ClassBadge } from "@/components/ClassBadge";
 import { formatPeriod } from "@/lib/formatters";
 import { classEmoji } from "@/lib/candidateUtils";
 import type { CandidateRecord } from "@/types/candidate";
+import type { Annotation } from "@/types/analysis";
 
 interface Props {
   candidate: CandidateRecord;
   onClose: () => void;
+  annotation?: Annotation;
 }
 
-export function CandidateDetailPanel({ candidate, onClose }: Props) {
+export function CandidateDetailPanel({ candidate, onClose, annotation }: Props) {
   return (
     <aside className="flex h-full flex-col border-l border-border-subtle bg-bg-elevated">
       <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
@@ -82,6 +84,30 @@ export function CandidateDetailPanel({ candidate, onClose }: Props) {
                 </span>
               ))}
             </div>
+          </div>
+        )}
+
+        {annotation?.flagged && (
+          <div className="rounded-md border border-border-soft bg-white/5 p-3 space-y-2">
+            <p className="font-semibold text-xs text-text-primary flex items-center gap-1.5">
+              <span>🚩</span> Review Flag
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span className="text-text-muted block">Priority</span>
+                <span className="text-status-error font-medium">{annotation.priority}</span>
+              </div>
+              <div>
+                <span className="text-text-muted block">Category</span>
+                <span className="text-brand-light font-medium">{annotation.category}</span>
+              </div>
+            </div>
+            {annotation.notes && (
+              <div>
+                <span className="text-text-muted text-xs block">Notes</span>
+                <p className="text-xs text-text-secondary mt-0.5 whitespace-pre-wrap">{annotation.notes}</p>
+              </div>
+            )}
           </div>
         )}
       </div>

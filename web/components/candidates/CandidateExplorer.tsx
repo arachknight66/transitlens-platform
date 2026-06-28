@@ -20,6 +20,7 @@ import type {
   CandidateSortKey,
 } from "@/types/candidate";
 import { DEFAULT_CANDIDATE_FILTERS } from "@/types/candidate";
+import type { Annotation } from "@/types/analysis";
 
 export function CandidateExplorer() {
   const router = useRouter();
@@ -33,12 +34,22 @@ export function CandidateExplorer() {
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [detailTarget, setDetailTarget] = useState<string | null>(null);
   const [compareMode, setCompareMode] = useState(false);
+  const [annotations, setAnnotations] = useState<Record<string, Annotation>>({});
 
   useEffect(() => {
     loadCandidates().then((rows) => {
       setAllRows(rows);
       setLoading(false);
     });
+
+    const raw = localStorage.getItem("transitlens-annotations");
+    if (raw) {
+      try {
+        setAnnotations(JSON.parse(raw));
+      } catch {
+        // Ignore
+      }
+    }
   }, []);
 
   const filtered = useMemo(() => {
@@ -176,6 +187,7 @@ export function CandidateExplorer() {
           onToggleSelect={toggleSelect}
           onOpenRow={(row) => router.push(`/results/${row.targetId}`)}
           onFocusIndex={setFocusedIndex}
+          annotations={annotations}
         />
       </div>
 
@@ -183,6 +195,7 @@ export function CandidateExplorer() {
         <CandidateDetailPanel
           candidate={detailRow}
           onClose={() => setDetailTarget(null)}
+          annotation={annotations[detailRow.targetId]}
         />
       )}
     </div>

@@ -88,3 +88,13 @@ export interface ProgressEvent {
   msg: string;
   result?: AnalysisResult;
 }
+
+export interface Annotation {
+  targetId: string;
+  flagged: boolean;
+  priority: "High" | "Medium" | "Low";
+  category: "Promising" | "Needs follow-up" | "False positive" | "Unclear";
+  notes: string;
+  updatedAt: string;
+}
+

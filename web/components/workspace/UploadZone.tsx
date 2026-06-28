@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import {
   parseCsvLightCurve,
-  LightCurveParseError,
+  parseFitsLightCurve,
   type ParsedLightCurve,
 } from "@/lib/parseLightCurve";
 
@@ -28,19 +28,30 @@ export function UploadZone({ data, error, onData, onError }: Props) {
         return;
       }
 
-      if (!ext.endsWith(".csv")) {
-        onError("FITS upload is not yet supported in the web UI — please use CSV.");
-        onData(null);
-        return;
-      }
-
       try {
-        const text = await file.text();
-        const parsed = parseCsvLightCurve(text, file.name);
-        onData(parsed);
+        if (ext.endsWith(".csv")) {
+          const text = await file.text();
+          const parsed = parseCsvLightCurve(text, file.name);
+          onData(parsed);
+        } else {
+          let buffer = await file.arrayBuffer();
+          if (ext.endsWith(".fits.gz")) {
+            // Natively decompress gzip using DecompressionStream
+            const ds = new DecompressionStream("gzip");
+            const decompressedStream = file.stream().pipeThrough(ds);
+            const response = new Response(decompressedStream);
+            buffer = await response.arrayBuffer();
+          }
+          const parsed = parseFitsLightCurve(buffer, file.name);
+          onData(parsed);
+        }
       } catch (err) {
         onData(null);
-        onError(err instanceof LightCurveParseError ? err.message : "Failed to parse file.");
+        onError(
+          err instanceof Error
+            ? err.message
+            : "Failed to parse file."
+        );
       }
     },
     [onData, onError]

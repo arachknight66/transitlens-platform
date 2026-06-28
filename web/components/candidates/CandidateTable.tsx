@@ -5,6 +5,7 @@ import { ClassBadge } from "@/components/ClassBadge";
 import { formatPeriod } from "@/lib/formatters";
 import { classEmoji } from "@/lib/candidateUtils";
 import type { CandidateRecord, CandidateSortKey } from "@/types/candidate";
+import type { Annotation } from "@/types/analysis";
 
 interface Props {
   rows: CandidateRecord[];
@@ -17,6 +18,7 @@ interface Props {
   onToggleSelect: (id: string) => void;
   onOpenRow: (row: CandidateRecord) => void;
   onFocusIndex: (index: number) => void;
+  annotations?: Record<string, Annotation>;
 }
 
 const COLUMNS: { key: CandidateSortKey | null; label: string; align?: "right" }[] = [
@@ -40,6 +42,7 @@ export function CandidateTable({
   onToggleSelect,
   onOpenRow,
   onFocusIndex,
+  annotations,
 }: Props) {
   const tableRef = useRef<HTMLTableElement>(null);
 
@@ -148,7 +151,19 @@ export function CandidateTable({
                   {row.snr?.toFixed(1) ?? "—"}
                 </td>
                 <td className="px-3 py-2.5 text-right text-2xs text-text-muted">
-                  {row.blendRisk === "suspected" ? "blend" : row.flags.length ? "⚑" : "—"}
+                  <span className="flex items-center justify-end gap-1.5">
+                    {annotations?.[row.targetId]?.flagged && (
+                      <span
+                        title={`[${annotations[row.targetId].priority}] ${annotations[row.targetId].category}${annotations[row.targetId].notes ? `: ${annotations[row.targetId].notes}` : ""}`}
+                        className="text-status-error cursor-help text-xs"
+                      >
+                        🚩
+                      </span>
+                    )}
+                    <span>
+                      {row.blendRisk === "suspected" ? "blend" : row.flags.length ? "⚑" : "—"}
+                    </span>
+                  </span>
                 </td>
               </tr>
             );
