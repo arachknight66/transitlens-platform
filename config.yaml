@@ -41,7 +41,7 @@ ui:
 export:
   html_enabled: true
   csv_enabled: true
-  pdf_enabled: false
+  pdf_enabled: true
   output_dir: "exports/"
   include_plots: true
   filename_template: "transitlens_{type}_{target_id}_{timestamp}"

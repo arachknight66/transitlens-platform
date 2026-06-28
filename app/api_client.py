@@ -248,3 +248,8 @@ def analyze_tess(tic_id: str, sector: int = None, metadata=None) -> dict:
         "Try the Demo page for pre-computed results."
     )
 
+
+def get_fallback_result(target_id: str) -> dict | None:
+    """Retrieve fallback result directly from demo_data/sample_results.json."""
+    return _load_fallback_result(target_id)
+
