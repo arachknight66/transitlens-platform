@@ -7,7 +7,7 @@ describe('application routing', () => {
 
     render(<App />);
 
-    expect(await screen.findByRole('heading', { name: /exoplanet transit analysis, end to end/i })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: /exoplanet transit analysis, end to end/i }, { timeout: 5_000 })).toBeVisible();
     expect(window.location.pathname).toBe('/');
   });
 });

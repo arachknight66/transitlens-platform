@@ -45,7 +45,7 @@ const AnalysisPage = () => {
           </div>
         )}
         {analysis.isPending && analysisId && <LoadingPanel />}
-        {analysis.isError && <ErrorPanel onRetry={() => void analysis.refetch()} />}
+        {analysis.isError && <ErrorPanel title="Analysis unavailable" message="TransitLens could not load this processed analysis from the platform gateway." onRetry={() => void analysis.refetch()} />}
         {analysis.data && validation && !validation.isValid && (
           <div className="rounded-xl border border-rose-400/20 bg-rose-400/5 p-5" role="alert">
             <p className="text-sm font-semibold text-rose-200">Processed data cannot be visualized</p>

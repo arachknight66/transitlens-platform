@@ -29,7 +29,7 @@ const DashboardPage = () => {
 
       <div className="mt-8">
         {summary.isPending && <LoadingPanel />}
-        {summary.isError && <ErrorPanel onRetry={() => void summary.refetch()} />}
+        {summary.isError && <ErrorPanel title="Dashboard services are unavailable" onRetry={() => void summary.refetch()} />}
         {summary.data && (
           <div className="space-y-6">
             <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Platform status">

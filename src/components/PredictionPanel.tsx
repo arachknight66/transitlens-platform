@@ -1,4 +1,5 @@
 import type { UseMutationResult } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 
 import type { PredictionResult } from '../types/prediction';
 import { validatePrediction } from '../utils/predictionValidation';
@@ -49,8 +50,14 @@ export const PredictionPanel = ({ prediction }: PredictionPanelProps) => {
           <p className="mt-2 text-sm text-slate-400">{validation.message}</p>
         </div>
       )}
-      {prediction.data && validation?.isValid && <PredictionCard prediction={prediction.data} />}
+      {prediction.data && validation?.isValid && (
+        <>
+          <PredictionCard prediction={prediction.data} />
+          <div className="flex justify-end">
+            <Link to={`/results?analysis_id=${encodeURIComponent(prediction.data.analysis_id)}`} className="rounded-lg border border-signal-400/25 px-4 py-2.5 text-xs font-semibold text-signal-300 hover:bg-signal-400/10">View scientific results</Link>
+          </div>
+        </>
+      )}
     </div>
   );
 };
-

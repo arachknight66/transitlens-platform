@@ -6,7 +6,7 @@
 
 Current Phase
 
-Phase 6 — Complete
+Phase 7 — Complete
 
 ---
 
@@ -95,9 +95,19 @@ Prediction
 - Structural validation of ML Core result ranges and identifiers
 - No local thresholding, confidence calculation, or model behavior
 
-Pending
+Scientific Results
 
-Results
+- Dedicated Results route with latest-analysis handoff and deep links
+- Transit depth, transit duration, estimated period, and SNR presentation
+- Explicit units and data-pipeline provenance for every scientific metric
+- Honest unavailable states for metrics absent from upstream services
+- Mission, target, observation, source-column, duration, and cadence metadata
+- Pipeline/schema versions, preprocessing configuration, and sample accounting
+- Associated ML Core prediction summary when available
+- Loading, gateway-error, empty, missing-prediction, and malformed-result states
+- No client-side scientific metric estimation or recalculation
+
+Pending
 
 Reports
 
@@ -107,15 +117,16 @@ About
 
 ---
 
-## Phase 6 Verification
+## Phase 7 Verification
 
 Passed
 
 - ESLint with zero warnings
-- Vitest: 29 tests
+- Vitest: 34 tests
 - TypeScript strict type-check
 - Vite production build
-- Browser verification of Analysis/inference route initialization, accessibility, layout overflow, and console state
+- Responsive Results layouts and populated/empty states verified through component tests
+- In-app browser verification was attempted, but the embedded preview tab crashed before navigation
 
 ---
 
@@ -132,9 +143,27 @@ Credentials are not persisted by the Phase 1 foundation.
 
 ## Next Authorized Phase
 
-Phase 7 — Scientific Results
+Phase 8 — Reports
 
-Transit depth, duration, estimated period, SNR, and observation metadata presentation are not yet implemented.
+PDF, JSON, and CSV report generation and download are not yet implemented.
+
+---
+
+## Scientific Results Gateway Contract
+
+The Results page consumes `GET /analyses/{analysis_id}/results` from the configured platform gateway.
+
+The response includes:
+
+- four scientific metric records with value, unit, and `transitlens-data-pipeline` provenance
+- observation mission, target, observation ID, source filename, source columns, duration, and cadence
+- pipeline/schema versions, preprocessing configuration, and sample accounting
+- the associated ML Core prediction when available
+- result generation timestamp
+
+Metric values may be `null` when the owning scientific service has not produced them. The UI displays those values as unavailable rather than estimating them.
+
+The current data-pipeline contract provides SNR, observation duration, cadence, metadata, and provenance. It does not currently expose transit depth, transit duration, or estimated period. The gateway contract preserves that gap explicitly; no scientific algorithm was added to this repository.
 
 ---
 
