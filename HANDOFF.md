@@ -6,7 +6,7 @@
 
 Current Phase
 
-Phase 5 — Complete
+Phase 6 — Complete
 
 ---
 
@@ -84,6 +84,17 @@ Analysis
 - Validation for empty, misaligned, and non-finite pipeline arrays
 - Custom Plotly bundle registering only the required scattergl trace
 
+Prediction
+
+- Gateway-orchestrated ML Core inference from a valid processed analysis
+- Run, pending, retry, error, malformed-response, success, and repeat-run states
+- Transit probability and decision confidence gauges
+- Prediction class and human-readable detection outcome
+- Model version, inference time, and generation timestamp
+- Accessible meter semantics for probability and confidence
+- Structural validation of ML Core result ranges and identifiers
+- No local thresholding, confidence calculation, or model behavior
+
 Pending
 
 Results
@@ -96,15 +107,15 @@ About
 
 ---
 
-## Phase 5 Verification
+## Phase 6 Verification
 
 Passed
 
 - ESLint with zero warnings
-- Vitest: 24 tests
+- Vitest: 29 tests
 - TypeScript strict type-check
 - Vite production build
-- Browser verification of Analysis navigation, reference form accessibility, Plotly bundle initialization, empty state, and runtime compatibility
+- Browser verification of Analysis/inference route initialization, accessibility, layout overflow, and console state
 
 ---
 
@@ -121,9 +132,29 @@ Credentials are not persisted by the Phase 1 foundation.
 
 ## Next Authorized Phase
 
-Phase 6 — Prediction
+Phase 7 — Scientific Results
 
-ML Core inference triggering and probability, confidence, and prediction display are not yet implemented.
+Transit depth, duration, estimated period, SNR, and observation metadata presentation are not yet implemented.
+
+---
+
+## Prediction Gateway Contract
+
+The Analysis workspace triggers `POST /analyses/{analysis_id}/prediction` on the configured platform gateway.
+
+The response preserves ML Core's stable platform-facing output and adds platform identity:
+
+- `prediction_id` and `analysis_id`
+- `probability` in `[0, 1]`
+- `confidence` in `[0, 1]`
+- binary `predicted_class`
+- non-empty `model_version`
+- non-negative `inference_time` in milliseconds
+- `created_at` timestamp
+
+The frontend maps `predicted_class` directly to its display label. It does not derive the class from probability, estimate confidence, load a model, or execute inference.
+
+The current transitlens-ml-core repository exposes this result as a stable Python inference contract but does not expose an HTTP application. The platform gateway contract isolates that transport gap; ML code was not imported or duplicated here.
 
 ---
 

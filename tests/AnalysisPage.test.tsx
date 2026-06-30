@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 import AnalysisPage from '../src/pages/AnalysisPage';
@@ -32,5 +32,19 @@ describe('AnalysisPage', () => {
     renderPage();
     expect(await screen.findByRole('alert')).toHaveTextContent(/different lengths/i);
     expect(screen.queryByTestId('plotly-chart')).not.toBeInTheDocument();
+  });
+
+  it('runs ML Core inference and displays its result', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify(processed), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        prediction_id: 'p1', analysis_id: 'a1', probability: 0.91, confidence: 0.82,
+        predicted_class: 1, model_version: '2.1.0', inference_time: 12.4, created_at: '2026-07-01T10:00:00Z',
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+    renderPage();
+    fireEvent.click(await screen.findByRole('button', { name: 'Run inference' }));
+
+    expect(await screen.findByText('Transit candidate detected')).toBeVisible();
+    expect(screen.getByText('2.1.0')).toBeVisible();
   });
 });

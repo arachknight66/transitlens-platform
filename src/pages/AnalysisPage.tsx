@@ -6,6 +6,8 @@ import { AnalysisReferenceForm } from '../components/AnalysisReferenceForm';
 import { ErrorPanel } from '../components/ErrorPanel';
 import { LoadingPanel } from '../components/LoadingPanel';
 import { PageHeader } from '../components/PageHeader';
+import { PredictionPanel } from '../components/PredictionPanel';
+import { usePrediction } from '../hooks/usePrediction';
 import { useProcessedAnalysis } from '../hooks/useProcessedAnalysis';
 import { getCurrentAnalysisId, setCurrentAnalysisId } from '../utils/analysisSession';
 import { validateProcessedAnalysis } from '../utils/analysisValidation';
@@ -15,9 +17,11 @@ const AnalysisPage = () => {
   const initialAnalysisId = searchParams.get('analysis_id')?.trim() ?? getCurrentAnalysisId();
   const [analysisId, setAnalysisId] = useState(initialAnalysisId);
   const analysis = useProcessedAnalysis(analysisId);
+  const prediction = usePrediction(analysisId);
   const validation = analysis.data ? validateProcessedAnalysis(analysis.data) : null;
 
   const loadAnalysis = (nextId: string): void => {
+    prediction.reset();
     setCurrentAnalysisId(nextId);
     setAnalysisId(nextId);
     setSearchParams({ analysis_id: nextId }, { replace: true });
@@ -55,6 +59,7 @@ const AnalysisPage = () => {
               <div className="rounded-xl border border-white/8 bg-space-900/70 p-4"><p className="text-[10px] tracking-[0.15em] text-slate-600 uppercase">Target</p><p className="mt-2 truncate text-sm text-slate-200">{analysis.data.source.target ?? 'Not provided'}</p></div>
               <div className="rounded-xl border border-white/8 bg-space-900/70 p-4"><p className="text-[10px] tracking-[0.15em] text-slate-600 uppercase">Samples</p><p className="mt-2 font-mono text-sm text-slate-200">{String(analysis.data.time.length)}</p></div>
             </section>
+            <PredictionPanel prediction={prediction} />
             <AnalysisChart analysis={analysis.data} />
           </>
         )}
