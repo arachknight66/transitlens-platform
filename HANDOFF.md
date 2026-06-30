@@ -6,7 +6,7 @@
 
 Current Phase
 
-Phase 3 — Complete
+Phase 4 — Complete
 
 ---
 
@@ -60,9 +60,18 @@ MAST Explorer
 - Per-observation download progress and cache-aware completion feedback
 - Search validation, loading, empty, authentication, API error, and download error states
 
-Pending
-
 Upload
+
+- Drag-and-drop and accessible file-picker workflow
+- FITS, FIT, and CSV extension validation
+- Empty-file and 250 MB size-limit validation
+- Selected-file format and size review
+- Multipart gateway upload with byte-level progress
+- Upload cancellation, retry, and error handling
+- Typed processed-upload receipt with analysis reference
+- Explicit UI notice that parsing and preprocessing are data-pipeline responsibilities
+
+Pending
 
 Analysis
 
@@ -76,15 +85,15 @@ About
 
 ---
 
-## Phase 3 Verification
+## Phase 4 Verification
 
 Passed
 
 - ESLint with zero warnings
-- Vitest: 10 tests
+- Vitest: 18 tests
 - TypeScript strict type-check
 - Vite production build
-- Browser verification of MAST navigation, form accessibility, identifier switching, validation, and console state
+- Browser verification of Upload navigation, dropzone accessibility, layout overflow, and console state
 
 ---
 
@@ -101,9 +110,28 @@ Credentials are not persisted by the Phase 1 foundation.
 
 ## Next Authorized Phase
 
-Phase 4 — Upload
+Phase 5 — Analysis
 
-FITS and CSV upload, validation, progress, and processing submission are not yet implemented.
+Raw, normalized, and wavelet-denoised light-curve visualizations are not yet implemented.
+
+---
+
+## Upload Gateway Contract
+
+The Upload page sends `multipart/form-data` to `POST /uploads` on the configured platform gateway. The multipart field is named `file`.
+
+The gateway response contains:
+
+- `upload_id`
+- `analysis_id`
+- `filename`
+- `format` (`fits` or `csv`)
+- `size_bytes`
+- `status` (`accepted`, `processing`, or `processed`)
+
+The platform gateway owns transport orchestration. It must hand accepted content to transitlens-data-pipeline through a public API and return its processing state. The frontend does not parse FITS/CSV content, preprocess light curves, or rely on a shared pipeline filesystem.
+
+The current transitlens-data-pipeline public API does not expose a byte-upload route. The gateway contract intentionally isolates that service gap; no scientific behavior was duplicated in this repository.
 
 ---
 
