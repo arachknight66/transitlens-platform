@@ -5,6 +5,7 @@ import { AppShell } from '../layouts/AppShell';
 
 const HomePage = lazy(() => import('../pages/HomePage'));
 const DashboardPage = lazy(() => import('../pages/DashboardPage'));
+const MastExplorerPage = lazy(() => import('../pages/MastExplorerPage'));
 
 const loadingFallback = (
   <div className="grid min-h-screen place-items-center bg-space-950 text-sm text-slate-300" role="status">
@@ -24,6 +25,10 @@ export const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: <Suspense fallback={loadingFallback}><DashboardPage /></Suspense>,
+      },
+      {
+        path: 'mast',
+        element: <Suspense fallback={loadingFallback}><MastExplorerPage /></Suspense>,
       },
       {
         path: '*',

@@ -6,7 +6,7 @@
 
 Current Phase
 
-Phase 2 — Complete
+Phase 3 — Complete
 
 ---
 
@@ -49,9 +49,18 @@ Dashboard
 - Loading, unavailable, empty, and populated dashboard states
 - React Query dashboard polling and manual retry
 
-Pending
-
 MAST Explorer
+
+- Search by target name, TIC ID, Kepler ID, or observation ID
+- Mission filtering for TESS, Kepler, and K2
+- Identifier normalization at the API orchestration boundary
+- Optional MAST token held only in browser session storage
+- Responsive observation metadata table with mission, product, and BJD range
+- Preferred FITS download requests delegated to the data pipeline
+- Per-observation download progress and cache-aware completion feedback
+- Search validation, loading, empty, authentication, API error, and download error states
+
+Pending
 
 Upload
 
@@ -67,15 +76,15 @@ About
 
 ---
 
-## Phase 2 Verification
+## Phase 3 Verification
 
 Passed
 
 - ESLint with zero warnings
-- Vitest: 5 tests
+- Vitest: 10 tests
 - TypeScript strict type-check
 - Vite production build
-- Browser verification of Home, navigation, Dashboard unavailable state, and horizontal overflow
+- Browser verification of MAST navigation, form accessibility, identifier switching, validation, and console state
 
 ---
 
@@ -92,9 +101,22 @@ Credentials are not persisted by the Phase 1 foundation.
 
 ## Next Authorized Phase
 
-Phase 3 — MAST Explorer
+Phase 4 — Upload
 
-Authentication, search, observation listing, and downloads are not yet implemented.
+FITS and CSV upload, validation, progress, and processing submission are not yet implemented.
+
+---
+
+## MAST API Contract
+
+The explorer consumes the data-pipeline public interface through the configured platform gateway:
+
+- `GET /search` with `target`, repeated `missions`, `radius_deg`, and `limit`
+- `POST /download` with `{ "mast_id": "..." }`
+
+TIC identifiers are normalized to `TIC <id>` and Kepler identifiers to `KIC <id>` before search. Target names and observation IDs are passed unchanged. The gateway receives an optional session credential through the `Authorization` header; credentials are never placed in URLs or persistent browser storage.
+
+The download response identifies the preferred FITS product cached by transitlens-data-pipeline. The platform does not inspect products, parse FITS, or duplicate MAST logic.
 
 ---
 

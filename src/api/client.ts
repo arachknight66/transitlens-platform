@@ -1,6 +1,7 @@
 import { env } from '../config/env';
 
-type QueryValue = boolean | number | string | null | undefined;
+type QueryPrimitive = boolean | number | string;
+type QueryValue = QueryPrimitive | readonly QueryPrimitive[] | null | undefined;
 
 export interface ApiRequestOptions extends Omit<RequestInit, 'body'> {
   body?: BodyInit | object | null;
@@ -24,7 +25,13 @@ const createUrl = (path: string, query?: ApiRequestOptions['query']): URL => {
   const url = new URL(`${env.platformApiUrl}${normalizedPath}`);
 
   Object.entries(query ?? {}).forEach(([key, value]) => {
-    if (value !== null && value !== undefined) url.searchParams.set(key, String(value));
+    if (Array.isArray(value)) {
+      value.forEach((item) => {
+        url.searchParams.append(key, String(item));
+      });
+    } else if (value !== null && value !== undefined) {
+      url.searchParams.set(key, String(value));
+    }
   });
 
   return url;
