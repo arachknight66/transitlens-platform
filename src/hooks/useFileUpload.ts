@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 
 import { uploadObservation } from '../services/uploadService';
 import type { UploadReceipt } from '../types/upload';
+import { setCurrentAnalysisId } from '../utils/analysisSession';
 
 type UploadState = 'idle' | 'uploading' | 'success' | 'error' | 'cancelled';
 
@@ -29,6 +30,7 @@ export const useFileUpload = () => {
       });
       setProgress(100);
       setReceipt(result);
+      setCurrentAnalysisId(result.analysis_id);
       setState('success');
     } catch (cause) {
       if (cause instanceof DOMException && cause.name === 'AbortError') {
@@ -57,4 +59,3 @@ export const useFileUpload = () => {
 
   return { state, progress, receipt, error, upload, cancel, reset } as const;
 };
-

@@ -9,9 +9,10 @@ const activeItems = [
   { label: 'Dashboard', to: '/dashboard' },
   { label: 'MAST Explorer', to: '/mast' },
   { label: 'Upload', to: '/upload' },
+  { label: 'Analysis', to: '/analysis' },
 ] as const;
 
-const futureItems = ['Analysis', 'Results', 'Reports', 'Settings', 'About'] as const;
+const futureItems = ['Results', 'Reports', 'Settings', 'About'] as const;
 
 export const Navigation = ({ onNavigate }: NavigationProps) => (
   <nav aria-label="Primary navigation" className="mt-9 flex flex-1 flex-col">

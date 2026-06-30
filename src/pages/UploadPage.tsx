@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { FileDropzone } from '../components/FileDropzone';
 import { PageHeader } from '../components/PageHeader';
@@ -71,7 +72,10 @@ const UploadPage = () => {
           <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-5" role="status">
             <p className="text-sm font-semibold text-emerald-200">File accepted for analysis</p>
             <p className="mt-2 text-sm text-slate-400">{transfer.receipt.filename} was {transfer.receipt.status}. Analysis reference: <span className="font-mono text-slate-300">{transfer.receipt.analysis_id}</span></p>
-            <button type="button" onClick={clearSelection} className="mt-4 rounded-lg border border-emerald-300/25 px-4 py-2 text-xs font-semibold text-emerald-200 hover:bg-emerald-300/10">Upload another file</button>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link to={`/analysis?analysis_id=${encodeURIComponent(transfer.receipt.analysis_id)}`} className="rounded-lg bg-emerald-300 px-4 py-2 text-xs font-semibold text-space-950 hover:bg-emerald-200">Open analysis</Link>
+              <button type="button" onClick={clearSelection} className="rounded-lg border border-emerald-300/25 px-4 py-2 text-xs font-semibold text-emerald-200 hover:bg-emerald-300/10">Upload another file</button>
+            </div>
           </div>
         )}
       </div>
@@ -80,4 +84,3 @@ const UploadPage = () => {
 };
 
 export default UploadPage;
-

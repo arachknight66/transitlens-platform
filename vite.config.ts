@@ -4,6 +4,17 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      buffer: 'buffer/',
+    },
+  },
+  define: {
+    global: 'globalThis',
+  },
+  build: {
+    chunkSizeWarningLimit: 1500,
+  },
   server: {
     port: 5173,
     strictPort: true,

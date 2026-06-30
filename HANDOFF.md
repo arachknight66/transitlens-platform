@@ -6,7 +6,7 @@
 
 Current Phase
 
-Phase 4 — Complete
+Phase 5 — Complete
 
 ---
 
@@ -71,9 +71,20 @@ Upload
 - Typed processed-upload receipt with analysis reference
 - Explicit UI notice that parsing and preprocessing are data-pipeline responsibilities
 
-Pending
-
 Analysis
+
+- Analysis-reference loading with query-string deep links
+- Latest uploaded analysis retained in session storage
+- Raw, normalized, and wavelet-denoised light curves
+- Three vertically aligned Plotly WebGL traces on one synchronized time axis
+- Zoom, pan, scroll zoom, reset-view, hover, and PNG export controls
+- Memoized chart model and lazy Analysis route
+- Source, target, and sample-count context
+- Loading, unavailable, empty, and malformed-pipeline-data states
+- Validation for empty, misaligned, and non-finite pipeline arrays
+- Custom Plotly bundle registering only the required scattergl trace
+
+Pending
 
 Results
 
@@ -85,15 +96,15 @@ About
 
 ---
 
-## Phase 4 Verification
+## Phase 5 Verification
 
 Passed
 
 - ESLint with zero warnings
-- Vitest: 18 tests
+- Vitest: 24 tests
 - TypeScript strict type-check
 - Vite production build
-- Browser verification of Upload navigation, dropzone accessibility, layout overflow, and console state
+- Browser verification of Analysis navigation, reference form accessibility, Plotly bundle initialization, empty state, and runtime compatibility
 
 ---
 
@@ -110,9 +121,25 @@ Credentials are not persisted by the Phase 1 foundation.
 
 ## Next Authorized Phase
 
-Phase 5 — Analysis
+Phase 6 — Prediction
 
-Raw, normalized, and wavelet-denoised light-curve visualizations are not yet implemented.
+ML Core inference triggering and probability, confidence, and prediction display are not yet implemented.
+
+---
+
+## Analysis Gateway Contract
+
+The Analysis page consumes `GET /analyses/{analysis_id}` from the configured platform gateway.
+
+The response wraps the transitlens-data-pipeline `/process` output with platform identity and source context:
+
+- `analysis_id` and `status: "processed"`
+- `source` with filename and optional target/mission
+- aligned `time`, `flux`, `normalized_flux`, `median_filtered_flux`, and `wavelet_flux` arrays
+- optional `quality` array
+- pipeline `metadata` and `features`
+
+The frontend verifies only structural chart safety: samples exist, displayed arrays align, and values are finite. It performs no normalization, denoising, parsing, feature generation, or other scientific processing.
 
 ---
 
