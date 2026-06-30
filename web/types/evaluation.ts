@@ -33,12 +33,33 @@ export interface InjectionRecoveryPoint {
 }
 
 export interface EvaluationMetrics {
-  val_metrics: SplitMetrics;
-  test_metrics: SplitMetrics;
-  overall_period_recovery_pct: number;
-  overall_f1: number;
+  schema_version: number;
+  generated_at: string;
+  disclaimer: string;
+  restricted_classifier: EvidenceGroup & {
+    n_blind_targets: number; macro_f1: number; ece: number; review_rate: number; production_eligible: false;
+  };
+  injection_recovery: EvidenceGroup & {
+    n_trials: number; overall_recovery: number; high_snr_recovery: number; control_false_positive_rate: number;
+    median_period_error_pct: number; median_depth_error_pct: number; median_duration_error_pct: number;
+  };
+  real_tess_pilot: EvidenceGroup & { n_targets: number };
+  ingestion_scale: EvidenceGroup & { parsed_observations: number };
+  val_metrics?: SplitMetrics;
+  test_metrics?: SplitMetrics;
+  overall_period_recovery_pct?: number;
+  overall_f1?: number;
   injection_by_depth?: InjectionRecoveryPoint[];
   injection_by_period?: InjectionRecoveryPoint[];
+}
+
+export interface EvidenceGroup {
+  title: string;
+  evidence_type: string;
+  sample_size: number;
+  measurement_date: string;
+  source_artifact: string;
+  limitation: string;
 }
 
 export interface InjectionRecoveryRow {

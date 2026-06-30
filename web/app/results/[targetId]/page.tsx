@@ -5,5 +5,5 @@ interface Props {
 }
 
 export default function ResultsPage({ params }: Props) {
-  return <ResultsPageContent targetId={params.targetId} />;
+  return <ResultsPageContent targetId={decodeURIComponent(params.targetId)} />;
 }

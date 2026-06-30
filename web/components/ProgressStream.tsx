@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { analyzeStream } from "@/lib/api";
+import { analyzeFile, analyzeStream, analyzeTess } from "@/lib/api";
+import type { SourceMode } from "@/lib/analysisConfig";
 import { SkeletonCard } from "./SkeletonCard";
 import type { AnalysisResult } from "@/types/analysis";
 
@@ -12,6 +13,10 @@ interface Props {
   timeArr?: number[];
   fluxArr?: number[];
   configOverride?: Record<string, unknown>;
+  sourceMode?: SourceMode;
+  originalFile?: File;
+  sector?: number;
+  cutoutSize?: number;
 }
 
 const STEPS = [
@@ -65,6 +70,10 @@ export function ProgressStream({
   timeArr = [],
   fluxArr = [],
   configOverride,
+  sourceMode = "demo",
+  originalFile,
+  sector,
+  cutoutSize = 15,
 }: Props) {
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("Initializing analysis…");
@@ -82,19 +91,23 @@ export function ProgressStream({
 
     const run = async () => {
       try {
-        const result = await analyzeStream(
-          timeArr,
-          fluxArr,
-          targetId,
-          (event) => {
+        const onEvent = (event: { pct: number; msg: string; stage: string }) => {
             setProgress(event.pct);
             setMessage(event.msg);
             setCurrentStage(event.stage);
             if (event.pct >= 60) setShowPreview(true);
-          },
-          configOverride,
-          abortControllerRef.current?.signal
-        );
+        };
+        let result: AnalysisResult;
+        if (sourceMode === "upload") {
+          if (!originalFile) throw new Error("Original upload payload is unavailable.");
+          onEvent({ stage: "preprocessing", pct: 12, msg: "Uploading the untouched file to the authoritative backend loader…" });
+          result = await analyzeFile(originalFile, targetId, configOverride, abortControllerRef.current?.signal);
+        } else if (sourceMode === "tic") {
+          onEvent({ stage: "preprocessing", pct: 10, msg: "Resolving TIC coordinates, sectors, and TESScut cache state…" });
+          result = await analyzeTess(targetId.replace(/^TIC-/i, ""), sector, cutoutSize, configOverride, abortControllerRef.current?.signal);
+        } else {
+          result = await analyzeStream(timeArr, fluxArr, targetId, onEvent, configOverride, abortControllerRef.current?.signal);
+        }
 
         if (!completedRef.current) {
           completedRef.current = true;
@@ -116,7 +129,7 @@ export function ProgressStream({
       abortControllerRef.current?.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onComplete, targetId, timeArr, fluxArr, configOverride, retryKey]);
+  }, [onComplete, targetId, timeArr, fluxArr, configOverride, sourceMode, originalFile, sector, cutoutSize, retryKey]);
 
   const activeIdx = stageIndex(failedStage ?? currentStage);
 

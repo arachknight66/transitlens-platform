@@ -35,9 +35,9 @@ export default function AnalyzePage() {
     (result: AnalysisResult) => {
       setResult(result);
       setAnalysisRunning(false);
-      setUsingFallback(true);
+      setUsingFallback(false);
       setRunState(null);
-      router.push(`/results/${result.target_id}`);
+      router.push(`/results/${encodeURIComponent(result.target_id)}`);
     },
     [router, setAnalysisRunning, setResult, setUsingFallback]
   );
@@ -56,6 +56,10 @@ export default function AnalyzePage() {
             timeArr={runState.time}
             fluxArr={runState.flux}
             configOverride={runState.configOverride}
+            sourceMode={runState.sourceMode}
+            originalFile={runState.originalFile}
+            sector={runState.sector}
+            cutoutSize={runState.cutoutSize}
             onComplete={handleComplete}
           />
         </div>

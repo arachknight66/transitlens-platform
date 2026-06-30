@@ -24,7 +24,7 @@ const CANDIDATE_META = {
   b: {
     name: "Candidate B",
     expectedClass: "eclipsing_binary",
-    desc: "Deep 18% V-shaped eclipse every 1.87 d — eclipsing binary.",
+    desc: "Deep 12.3% V-shaped eclipse every 1.87 d — eclipsing binary.",
     bgClass: "bg-cls-binary-bg",
     borderClass: "border-cls-binary-border",
     sparkline: (

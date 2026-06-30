@@ -25,7 +25,7 @@ export default function EvaluationPage() {
       <div className="mx-auto max-w-6xl">
         <PageHeader
           title="Evaluation Dashboard"
-          subtitle="Classification accuracy, parameter recovery, and injection-recovery benchmarks."
+          subtitle="Evidence-separated blind-model, synthetic injection, pilot-real, and ingestion results."
         />
         <EvaluationDashboard />
       </div>

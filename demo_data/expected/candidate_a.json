@@ -1,0 +1,46 @@
+{
+  "target_id": "candidate_a",
+  "candidate_detected": true,
+  "predicted_class": "exoplanet_transit",
+  "confidence": 0.871993,
+  "period_days": 3.420667,
+  "period_uncertainty_days": 0.05621533,
+  "depth": 0.012991,
+  "depth_uncertainty": 3.356e-05,
+  "duration_days": 0.112,
+  "duration_uncertainty_days": 0.02027952,
+  "snr": 123.4478,
+  "bootstrap_fap": 0.0,
+  "transit_count": 7,
+  "class_probabilities": {
+    "exoplanet_transit": 0.877435,
+    "eclipsing_binary": 0.090962,
+    "blend_contamination": 0.031603,
+    "stellar_variability_or_other": 0.0
+  },
+  "class_probability_status": "prototype_calibrated",
+  "ml_predicted_class": "exoplanet_transit",
+  "ml_review_required": true,
+  "ml_model_id": "prototype-20260629T153312Z",
+  "production_eligible": false,
+  "denoising": {
+    "applied": true,
+    "accepted": true,
+    "method": "savgol_segmented_transit_masked",
+    "rejection_reasons": [],
+    "noise_before": 0.002620943217499575,
+    "noise_after": 0.0016475378314603885,
+    "noise_reduction_fraction": 0.3713950685920743,
+    "depth_attenuation_fraction": 4.187774649176005e-05,
+    "period_change_fraction": 0.0,
+    "duration_change_fraction": 0.0,
+    "transit_masked_points": 960,
+    "detection_series": "cleaned_detrended"
+  },
+  "pipeline_version": "0.1.0",
+  "fixture": {
+    "baseline_days": 25.69305555555556,
+    "n_points": 17889,
+    "csv_sha256": "500ef0ebd843c617c9d4be3b094e6c053b156300de65bd2a834ad956cbd13ff9"
+  }
+}

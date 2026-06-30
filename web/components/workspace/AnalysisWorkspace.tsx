@@ -29,6 +29,9 @@ export interface RunPayload {
   flux: number[];
   configOverride: Record<string, unknown>;
   sourceMode: SourceMode;
+  originalFile?: File;
+  sector?: number;
+  cutoutSize?: number;
 }
 
 interface Props {
@@ -40,14 +43,17 @@ export function AnalysisWorkspace({ onRun, running = false }: Props) {
   const [sourceMode, setSourceMode] = useState<SourceMode>("demo");
   const [selectedDemo, setSelectedDemo] = useState<"a" | "b" | "c" | null>("a");
   const [uploadData, setUploadData] = useState<ParsedLightCurve | null>(null);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [ticId, setTicId] = useState("");
+  const [sector, setSector] = useState<number | undefined>();
+  const [cutoutSize, setCutoutSize] = useState(15);
   const [config, setConfig] = useState<AnalysisConfigForm>(DEFAULT_CONFIG);
 
   const targetId = useMemo(() => {
     if (sourceMode === "demo" && selectedDemo) return getDemoTargetId(selectedDemo);
     if (sourceMode === "upload" && uploadData) {
-      return uploadData.filename.replace(/\.[^.]+$/, "");
+      return uploadData.filename.replace(/\.(fits|fit|fts)(\.gz)?$/i, "").replace(/\.csv$/i, "");
     }
     if (sourceMode === "tic" && ticId) return getTicTargetId(ticId);
     return null;
@@ -56,10 +62,10 @@ export function AnalysisWorkspace({ onRun, running = false }: Props) {
   const canRun = useMemo(() => {
     if (running) return false;
     if (sourceMode === "demo") return selectedDemo != null;
-    if (sourceMode === "upload") return uploadData != null && !uploadError;
-    if (sourceMode === "tic") return ticId.replace(/\D/g, "").length > 0;
+    if (sourceMode === "upload") return uploadData != null && uploadFile != null && !uploadError;
+    if (sourceMode === "tic") return ticId.replace(/\D/g, "").length > 0 && sector != null;
     return false;
-  }, [sourceMode, selectedDemo, uploadData, uploadError, ticId, running]);
+  }, [sourceMode, selectedDemo, uploadData, uploadFile, uploadError, ticId, sector, running]);
 
   const handleRun = async () => {
     if (!targetId || !canRun) return;
@@ -83,6 +89,9 @@ export function AnalysisWorkspace({ onRun, running = false }: Props) {
       flux,
       configOverride: buildConfigOverride(config),
       sourceMode,
+      originalFile: sourceMode === "upload" ? uploadFile ?? undefined : undefined,
+      sector: sourceMode === "tic" ? sector : undefined,
+      cutoutSize: sourceMode === "tic" ? cutoutSize : undefined,
     });
   };
 
@@ -129,10 +138,14 @@ export function AnalysisWorkspace({ onRun, running = false }: Props) {
                 error={uploadError}
                 onData={setUploadData}
                 onError={setUploadError}
+                onFile={setUploadFile}
               />
             )}
 
-            {sourceMode === "tic" && <TICInput value={ticId} onChange={setTicId} />}
+            {sourceMode === "tic" && (
+              <TICInput value={ticId} onChange={setTicId} sector={sector} onSectorChange={setSector}
+                cutoutSize={cutoutSize} onCutoutSizeChange={setCutoutSize} />
+            )}
           </section>
 
           <section className="rounded-lg border border-border-subtle bg-bg-elevated p-5">

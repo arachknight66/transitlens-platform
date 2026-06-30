@@ -16,11 +16,13 @@ interface PlotTab {
 const PLOT_TABS: PlotTab[] = [
   { id: "raw_lightcurve", label: "Raw LC", caption: "Uncorrected flux time series." },
   { id: "cleaned_lightcurve", label: "Cleaned LC", caption: "Detrended and normalized light curve." },
+  { id: "denoised_lightcurve", label: "Denoised LC", caption: "Optional transit-masked representation; acceptance gates are reported separately." },
   { id: "periodogram", label: "Periodogram", caption: "Box Least Squares periodogram." },
   { id: "phase_folded", label: "Phase Fold", caption: "Phase-folded transit profile." },
   { id: "transit_stack", label: "Transit Stack", caption: "Individual transits aligned in time." },
   { id: "posterior_corner", label: "Corner", caption: "MCMC posterior corner plot." },
   { id: "alias_comparison", label: "Alias", caption: "Period alias comparison." },
+  { id: "aperture_image", label: "Aperture", caption: "Deterministic TESScut/TPF aperture used for extraction." },
 ];
 
 interface Props {

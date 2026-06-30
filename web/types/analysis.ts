@@ -21,11 +21,13 @@ export interface Features {
 export interface Plots {
   raw_lightcurve?: string;
   cleaned_lightcurve?: string;
+  denoised_lightcurve?: string;
   periodogram?: string;
   phase_folded?: string;
   transit_stack?: string;
   posterior_corner?: string;
   alias_comparison?: string;
+  aperture_image?: string;
 }
 
 export interface ClassProbabilities {
@@ -76,6 +78,30 @@ export interface AnalysisResult {
   beta_factor?: number | null;
   fit_status?: string;
   quality_flags?: string[];
+  source_status?: "live" | "downloaded" | "cached" | "offline_fixture" | string;
+  source_provenance?: Record<string, unknown>;
+  parser_warnings?: string[];
+  processing_stages?: Array<{ stage: string; status: string }>;
+  denoising?: {
+    applied?: boolean;
+    accepted?: boolean;
+    method?: string;
+    rejection_reasons?: string[];
+    noise_before?: number;
+    noise_after?: number;
+    noise_reduction_fraction?: number;
+    depth_attenuation_fraction?: number | null;
+    period_change_fraction?: number | null;
+    duration_change_fraction?: number | null;
+    detection_series?: string;
+  };
+  series?: Record<string, { time: number[]; flux: number[] }>;
+  ml_predicted_class?: string | null;
+  ml_review_required?: boolean | null;
+  ml_review_reasons?: string[];
+  ml_model_id?: string | null;
+  ml_model_status?: string | null;
+  production_eligible?: boolean;
   raw_time?: number[];
   raw_flux?: number[];
   bls_periods?: number[];

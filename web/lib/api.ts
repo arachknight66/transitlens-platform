@@ -23,6 +23,7 @@ function buildPayload(
     time,
     flux,
     target_id: targetId,
+    metadata: { source_type: targetId.startsWith("candidate_") ? "synthetic_demo" : "array_input" },
   };
   if (configOverride) {
     payload.config = configOverride;
@@ -51,34 +52,10 @@ export async function analyze(
   return res.json() as Promise<AnalysisResult>;
 }
 
-function parseSseBuffer(
-  buffer: string,
-  onEvent: (event: ProgressEvent) => void
-): { remainder: string; result: AnalysisResult | null } {
-  let result: AnalysisResult | null = null;
-  const lines = buffer.split("\n");
-
-  for (let i = 0; i < lines.length - 1; i++) {
-    const line = lines[i].trim();
-    if (!line.startsWith("data:")) continue;
-
-    try {
-      const event = JSON.parse(line.slice(5).trim()) as ProgressEvent;
-      onEvent(event);
-      if (event.result) {
-        result = event.result;
-      }
-    } catch {
-      // Skip malformed SSE lines
-    }
-  }
-
-  return { remainder: lines[lines.length - 1], result };
-}
-
 export async function analyzeTess(
   ticId: string,
   sector?: number,
+  cutoutSize = 15,
   configOverride?: Record<string, unknown>,
   signal?: AbortSignal
 ): Promise<AnalysisResult> {
@@ -87,6 +64,7 @@ export async function analyzeTess(
   if (sector != null) {
     formData.append("sector", String(sector));
   }
+  formData.append("cutout_size", String(cutoutSize));
   if (configOverride) {
     formData.append("config", JSON.stringify(configOverride));
   }
@@ -104,6 +82,34 @@ export async function analyzeTess(
   }
 
   return res.json() as Promise<AnalysisResult>;
+}
+
+export async function getTesscutSectors(ticId: string, signal?: AbortSignal): Promise<{
+  tic_id: string;
+  ra_deg: number;
+  dec_deg: number;
+  sectors: number[];
+  default_sector: number | null;
+}> {
+  const clean = ticId.replace(/^TIC[-\s]*/i, "").trim();
+  const res = await fetch(`${BASE_URL}/tesscut/sectors/${encodeURIComponent(clean)}`, { signal });
+  if (!res.ok) throw new Error(`TESScut sector lookup failed: ${await res.text()}`);
+  return res.json();
+}
+
+export async function analyzeFile(
+  file: File,
+  targetId: string,
+  configOverride?: Record<string, unknown>,
+  signal?: AbortSignal
+): Promise<AnalysisResult> {
+  const body = new FormData();
+  body.append("file", file, file.name);
+  body.append("target_id", targetId);
+  body.append("config", JSON.stringify(configOverride ?? {}));
+  const res = await fetch(`${BASE_URL}/analyze/file`, { method: "POST", body, signal });
+  if (!res.ok) throw new Error(`Authoritative upload analysis failed: ${await res.text()}`);
+  return res.json();
 }
 
 async function runTessAnalysisWithProgress(
@@ -129,7 +135,7 @@ async function runTessAnalysisWithProgress(
   }, 1200);
 
   try {
-    const result = await analyzeTess(ticId, undefined, configOverride, signal);
+    const result = await analyzeTess(ticId, undefined, 15, configOverride, signal);
     clearInterval(interval);
     onEvent({ stage: "complete", pct: 100, msg: "Analysis complete.", result });
     return result;
@@ -153,98 +159,25 @@ export async function analyzeStream(
     return runTessAnalysisWithProgress(cleanId, onEvent, configOverride, signal);
   }
 
-  try {
-    const res = await fetch(`${BASE_URL}/analyze/stream`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(buildPayload(time, flux, targetId, configOverride)),
-      signal,
-    });
-
-    if (!res.ok) {
-      throw new Error(`Stream failed: ${res.status} ${res.statusText}`);
-    }
-
-    const reader = res.body?.getReader();
-    if (!reader) {
-      throw new Error("No response body");
-    }
-
-    const decoder = new TextDecoder();
-    let buffer = "";
-    let result: AnalysisResult | null = null;
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const parsed = parseSseBuffer(buffer, onEvent);
-      buffer = parsed.remainder;
-      if (parsed.result) {
-        result = parsed.result;
-      }
-    }
-
-    if (buffer.trim()) {
-      const parsed = parseSseBuffer(`${buffer}\n`, onEvent);
-      if (parsed.result) {
-        result = parsed.result;
-      }
-    }
-
-    if (!result) {
-      throw new Error("Stream ended without a result");
-    }
-
-    return result;
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      throw error;
-    }
-    return syntheticStreamFallback(time, flux, targetId, onEvent, configOverride);
-  }
-}
-
-async function syntheticStreamFallback(
-  time: number[],
-  flux: number[],
-  targetId: string,
-  onEvent: (event: ProgressEvent) => void,
-  configOverride?: Record<string, unknown>
-): Promise<AnalysisResult> {
   const steps: ProgressEvent[] = [
-    { stage: "preprocessing", pct: 10, msg: "Loading and preprocessing light curve..." },
-    { stage: "bls_search", pct: 30, msg: "Running BLS period search..." },
-    { stage: "features", pct: 55, msg: "Extracting 16 diagnostic features..." },
-    { stage: "classify", pct: 70, msg: "Classifying signal type..." },
-    { stage: "fitting", pct: 85, msg: "Fitting transit parameters..." },
-    { stage: "plots", pct: 95, msg: "Generating diagnostic plots..." },
+    { stage: "preprocessing", pct: 10, msg: "Submitting measurements to the scientific backend…" },
+    { stage: "bls_search", pct: 30, msg: "Running transit-preserving preprocessing and BLS search…" },
+    { stage: "features", pct: 55, msg: "Extracting physical and contamination diagnostics…" },
+    { stage: "classify", pct: 72, msg: "Ranking interpretations with restricted calibrated ML…" },
+    { stage: "fitting", pct: 85, msg: "Fitting parameters and uncertainties…" },
+    { stage: "plots", pct: 94, msg: "Rendering scientific diagnostics…" },
   ];
-
-  for (const event of steps) {
-    onEvent(event);
-    await new Promise((resolve) => setTimeout(resolve, 300));
-  }
-
+  let index = 0;
+  const timer = setInterval(() => {
+    if (index < steps.length) onEvent(steps[index++]);
+  }, 800);
   try {
-    const isHealthy = await healthCheck();
-    if (isHealthy && time.length > 0 && flux.length > 0) {
-      const result = await analyze(time, flux, targetId, configOverride);
-      onEvent({ stage: "complete", pct: 100, msg: "Analysis complete.", result });
-      return result;
-    }
-  } catch {
-    // Fall through to cached demo data
+    const result = await analyze(time, flux, targetId, configOverride, signal);
+    onEvent({ stage: "complete", pct: 100, msg: "Analysis complete.", result });
+    return result;
+  } finally {
+    clearInterval(timer);
   }
-
-  const fallback = await loadFallback(targetId);
-  if (!fallback) {
-    throw new Error(`Could not load fallback for ${targetId}`);
-  }
-
-  onEvent({ stage: "complete", pct: 100, msg: "Analysis complete.", result: fallback });
-  return fallback;
 }
 
 export async function loadLightCurve(

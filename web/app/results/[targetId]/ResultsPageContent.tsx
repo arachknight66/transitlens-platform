@@ -138,7 +138,7 @@ export function ResultsPageContent({ targetId }: Props) {
       <AnimatePresence mode="wait">
         <div key={targetId} className="mx-auto max-w-6xl space-y-8">
           <Section index={0}>
-            <HeroVerdictBar result={loadedResult} cached={usingFallback} />
+            <HeroVerdictBar result={loadedResult} cached={usingFallback && loadedResult.source_status !== "live"} />
           </Section>
 
           <Section index={1}>
@@ -188,7 +188,7 @@ export function ResultsPageContent({ targetId }: Props) {
           </Section>
 
           <Section index={2}>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
               <ParameterCard
                 label="Orbital Period"
                 value={formatPeriod(loadedResult.period_days)}
@@ -219,35 +219,60 @@ export function ResultsPageContent({ targetId }: Props) {
                       : "error"
                 }
               />
+              <ParameterCard
+                label="Bootstrap FAP"
+                value={loadedResult.bootstrap_fap != null ? loadedResult.bootstrap_fap.toExponential(2) : "—"}
+                quality={loadedResult.bootstrap_fap != null && loadedResult.bootstrap_fap <= 0.01 ? "ok" : "warn"}
+              />
             </div>
           </Section>
 
           <Section index={3}>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4">
+                <h3 className="text-sm font-semibold text-text-primary">Transit-preserving denoising</h3>
+                <p className="mt-2 text-sm text-text-secondary">
+                  {loadedResult.denoising?.accepted ? "Accepted" : "Rejected / cleaned fallback"} · {loadedResult.denoising?.method ?? "unavailable"}
+                </p>
+                <p className="mt-1 text-xs text-text-muted">Detection authority: {loadedResult.denoising?.detection_series?.replace(/_/g, " ") ?? "cleaned detrended"}</p>
+                <p className="mt-2 text-sm text-text-secondary">Robust OOT noise: {loadedResult.denoising?.noise_before?.toExponential(2) ?? "—"} → {loadedResult.denoising?.noise_after?.toExponential(2) ?? "—"} ({loadedResult.denoising?.noise_reduction_fraction != null ? `${(loadedResult.denoising.noise_reduction_fraction * 100).toFixed(1)}% reduction` : "unavailable"})</p>
+                {!!loadedResult.denoising?.rejection_reasons?.length && <p className="mt-2 text-xs text-status-warn">{loadedResult.denoising.rejection_reasons.join(" ")}</p>}
+              </div>
+              <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4">
+                <h3 className="text-sm font-semibold text-text-primary">AI and review status</h3>
+                <p className="mt-2 text-sm text-text-secondary">Restricted calibrated prototype · production eligible: no</p>
+                <p className="mt-1 text-sm text-text-secondary">ML rank: {loadedResult.ml_predicted_class?.replace(/_/g, " ") ?? "unavailable"} · final vetted: {loadedResult.predicted_class.replace(/_/g, " ")}</p>
+                <p className="mt-2 text-xs text-text-muted">{loadedResult.ml_review_required ? `Review required: ${(loadedResult.ml_review_reasons ?? []).join("; ") || "uncertainty or missing diagnostics"}` : "No model review flag reported."}</p>
+              </div>
+            </div>
+          </Section>
+
+          <Section index={4}>
             <ErrorBoundary>
               <ResultsTabs result={loadedResult} />
             </ErrorBoundary>
           </Section>
 
-          <Section index={4}>
+          <Section index={5}>
             <h3 className="mb-4 text-lg font-semibold text-text-primary">Diagnostic Plots</h3>
             <ErrorBoundary>
               <PlotGallery plots={loadedResult.plots ?? {}} />
             </ErrorBoundary>
           </Section>
 
-          <Section index={5}>
+          <Section index={6}>
             <ErrorBoundary>
               <AnnotationPanel targetId={targetId} />
             </ErrorBoundary>
           </Section>
 
-          <Section index={6}>
+          <Section index={7}>
             <ErrorBoundary>
               <ProvenancePanel result={loadedResult} />
             </ErrorBoundary>
           </Section>
 
-          <Section index={7}>
+          <Section index={8}>
             <ExportStrip result={loadedResult} />
           </Section>
         </div>
