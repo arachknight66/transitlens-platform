@@ -76,6 +76,69 @@ function parseSseBuffer(
   return { remainder: lines[lines.length - 1], result };
 }
 
+export async function analyzeTess(
+  ticId: string,
+  sector?: number,
+  configOverride?: Record<string, unknown>,
+  signal?: AbortSignal
+): Promise<AnalysisResult> {
+  const formData = new URLSearchParams();
+  formData.append("tic_id", ticId);
+  if (sector != null) {
+    formData.append("sector", String(sector));
+  }
+  if (configOverride) {
+    formData.append("config", JSON.stringify(configOverride));
+  }
+
+  const res = await fetch(`${BASE_URL}/analyze/tess`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: formData.toString(),
+    signal,
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`TESS Analysis failed: ${res.status} ${res.statusText}. Detail: ${errorText}`);
+  }
+
+  return res.json() as Promise<AnalysisResult>;
+}
+
+async function runTessAnalysisWithProgress(
+  ticId: string,
+  onEvent: (event: ProgressEvent) => void,
+  configOverride?: Record<string, unknown>,
+  signal?: AbortSignal
+): Promise<AnalysisResult> {
+  const steps: ProgressEvent[] = [
+    { stage: "preprocessing", pct: 15, msg: "Connecting to MAST and downloading TPF data..." },
+    { stage: "bls_search", pct: 35, msg: "Cleaning data and performing BLS period search..." },
+    { stage: "features", pct: 60, msg: "Extracting diagnostic properties and centroid shifts..." },
+    { stage: "classify", pct: 75, msg: "Vetting signal against pipeline rules..." },
+    { stage: "plots", pct: 90, msg: "Generating diagnostic matplotlib figures..." },
+  ];
+
+  let stepIdx = 0;
+  const interval = setInterval(() => {
+    if (stepIdx < steps.length) {
+      onEvent(steps[stepIdx]);
+      stepIdx++;
+    }
+  }, 1200);
+
+  try {
+    const result = await analyzeTess(ticId, undefined, configOverride, signal);
+    clearInterval(interval);
+    onEvent({ stage: "complete", pct: 100, msg: "Analysis complete.", result });
+    return result;
+  } catch (error) {
+    clearInterval(interval);
+    throw error;
+  }
+}
+
 export async function analyzeStream(
   time: number[],
   flux: number[],
@@ -84,6 +147,12 @@ export async function analyzeStream(
   configOverride?: Record<string, unknown>,
   signal?: AbortSignal
 ): Promise<AnalysisResult> {
+  const isTicId = targetId.toUpperCase().startsWith("TIC") || /^\d+$/.test(targetId);
+  if (isTicId) {
+    const cleanId = targetId.replace(/^TIC[-\s]*/i, "").trim();
+    return runTessAnalysisWithProgress(cleanId, onEvent, configOverride, signal);
+  }
+
   try {
     const res = await fetch(`${BASE_URL}/analyze/stream`, {
       method: "POST",
@@ -197,16 +266,17 @@ export async function loadFallback(targetId: string): Promise<AnalysisResult | n
   try {
     let metadata: Partial<AnalysisResult> | undefined;
 
-    const perTargetRes = await fetch(`/demo_data/${targetId}_metadata.json`);
-    if (perTargetRes.ok) {
-      metadata = (await perTargetRes.json()) as Partial<AnalysisResult>;
-    } else {
-      const sampleRes = await fetch("/demo_data/sample_metadata.json");
-      if (!sampleRes.ok) {
-        return null;
-      }
+    const sampleRes = await fetch("/demo_data/sample_metadata.json");
+    if (sampleRes.ok) {
       const allMeta = (await sampleRes.json()) as Record<string, Partial<AnalysisResult>>;
       metadata = allMeta[targetId];
+    }
+
+    if (!metadata) {
+      const perTargetRes = await fetch(`/demo_data/${targetId}_metadata.json`);
+      if (perTargetRes.ok) {
+        metadata = (await perTargetRes.json()) as Partial<AnalysisResult>;
+      }
     }
 
     if (!metadata) {

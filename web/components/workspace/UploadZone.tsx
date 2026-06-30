@@ -92,10 +92,13 @@ export function UploadZone({ data, error, onData, onError }: Props) {
           📁
         </span>
         <p className="text-sm font-medium text-text-primary">
-          Drop CSV/FITS here or click to browse
+          Drop CSV or FITS here or click to browse
         </p>
         <p className="mt-1 text-xs text-text-muted">
-          Requires time + flux columns, ≥500 points, normalized flux
+          Supports Light Curves (LC), Target Pixel Files (TP), and Data Validation (DVT) FITS files.
+        </p>
+        <p className="mt-0.5 text-2xs text-text-muted">
+          Requires time/flux columns, ≥500 points, and normalized flux.
         </p>
         <input
           ref={inputRef}

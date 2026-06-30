@@ -15,7 +15,8 @@ export function AnnotationPanel({ targetId, onAnnotationChange }: Props) {
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
-    const raw = localStorage.getItem("transitlens-annotations");
+    if (typeof window === "undefined") return;
+    const raw = window.localStorage.getItem("transitlens-annotations");
     if (raw) {
       try {
         const dict = JSON.parse(raw) as Record<string, Annotation>;
@@ -43,7 +44,8 @@ export function AnnotationPanel({ targetId, onAnnotationChange }: Props) {
     nextCategory: Annotation["category"],
     nextNotes: string
   ) => {
-    const raw = localStorage.getItem("transitlens-annotations");
+    if (typeof window === "undefined") return;
+    const raw = window.localStorage.getItem("transitlens-annotations");
     const dict = raw ? (JSON.parse(raw) as Record<string, Annotation>) : {};
 
     if (nextFlagged) {
@@ -56,11 +58,11 @@ export function AnnotationPanel({ targetId, onAnnotationChange }: Props) {
         updatedAt: new Date().toISOString(),
       };
       dict[targetId] = ann;
-      localStorage.setItem("transitlens-annotations", JSON.stringify(dict));
+      window.localStorage.setItem("transitlens-annotations", JSON.stringify(dict));
       if (onAnnotationChange) onAnnotationChange(ann);
     } else {
       delete dict[targetId];
-      localStorage.setItem("transitlens-annotations", JSON.stringify(dict));
+      window.localStorage.setItem("transitlens-annotations", JSON.stringify(dict));
       if (onAnnotationChange) onAnnotationChange(null);
     }
   };

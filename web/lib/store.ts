@@ -9,7 +9,7 @@ const noopStorage: StateStorage = {
 };
 
 const safeStorage = createJSONStorage(() =>
-  typeof window !== "undefined" ? localStorage : noopStorage
+  typeof window !== "undefined" ? window.localStorage : noopStorage
 );
 
 interface TransitStore {

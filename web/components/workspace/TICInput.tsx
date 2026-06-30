@@ -46,6 +46,10 @@ export function TICInput({ value, onChange }: Props) {
         />
       </div>
 
+      <p className="text-2xs text-text-muted">
+        Entering a TIC ID downloads the light curve directly from the MAST archive. Supports both single and multi-sector target analyses.
+      </p>
+
       {invalid && (
         <p className="text-sm text-status-error">TIC ID must be numeric.</p>
       )}

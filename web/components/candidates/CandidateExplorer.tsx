@@ -42,12 +42,14 @@ export function CandidateExplorer() {
       setLoading(false);
     });
 
-    const raw = localStorage.getItem("transitlens-annotations");
-    if (raw) {
-      try {
-        setAnnotations(JSON.parse(raw));
-      } catch {
-        // Ignore
+    if (typeof window !== "undefined") {
+      const raw = window.localStorage.getItem("transitlens-annotations");
+      if (raw) {
+        try {
+          setAnnotations(JSON.parse(raw));
+        } catch {
+          // Ignore
+        }
       }
     }
   }, []);

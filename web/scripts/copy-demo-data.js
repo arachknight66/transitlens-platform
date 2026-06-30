@@ -13,10 +13,12 @@ if (fs.existsSync(sourceDir)) {
   }
 
   for (const entry of fs.readdirSync(sourceDir)) {
-    if (/^candidate_[abc]_plots\.json$/.test(entry)) {
-      fs.copyFileSync(path.join(sourceDir, entry), path.join(targetDir, entry));
-    }
-    if (/^candidate_[abc]\.csv$/.test(entry)) {
+    if (
+      entry.endsWith("_plots.json") ||
+      entry.endsWith(".csv") ||
+      entry === "sample_metadata.json" ||
+      entry === "sample_results.json"
+    ) {
       fs.copyFileSync(path.join(sourceDir, entry), path.join(targetDir, entry));
     }
   }
