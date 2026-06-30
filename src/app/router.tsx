@@ -1,7 +1,10 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 
-const ProjectSetupPage = lazy(() => import('../pages/ProjectSetupPage'));
+import { AppShell } from '../layouts/AppShell';
+
+const HomePage = lazy(() => import('../pages/HomePage'));
+const DashboardPage = lazy(() => import('../pages/DashboardPage'));
 
 const loadingFallback = (
   <div className="grid min-h-screen place-items-center bg-space-950 text-sm text-slate-300" role="status">
@@ -12,11 +15,20 @@ const loadingFallback = (
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Suspense fallback={loadingFallback}><ProjectSetupPage /></Suspense>,
-  },
-  {
-    path: '*',
-    element: <Navigate to="/" replace />,
+    element: <AppShell />,
+    children: [
+      {
+        index: true,
+        element: <Suspense fallback={loadingFallback}><HomePage /></Suspense>,
+      },
+      {
+        path: 'dashboard',
+        element: <Suspense fallback={loadingFallback}><DashboardPage /></Suspense>,
+      },
+      {
+        path: '*',
+        element: <Navigate to="/" replace />,
+      },
+    ],
   },
 ]);
-

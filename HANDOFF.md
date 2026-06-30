@@ -6,7 +6,7 @@
 
 Current Phase
 
-Phase 1 — Complete
+Phase 2 — Complete
 
 ---
 
@@ -37,9 +37,19 @@ Project foundation
 - Environment-based platform API configuration
 - Unit tests for application routing, setup UI, and API communication
 
-Pending
-
 Dashboard
+
+- Responsive scientific workstation shell
+- Home page with platform workflow overview
+- Desktop and mobile navigation with accessible skip link
+- Dashboard status cards for system, pipeline, model, and active processing
+- Connected-service health and latency display
+- Active jobs with accessible progress indicators
+- Recent analyses and recent downloads
+- Loading, unavailable, empty, and populated dashboard states
+- React Query dashboard polling and manual retry
+
+Pending
 
 MAST Explorer
 
@@ -57,14 +67,15 @@ About
 
 ---
 
-## Phase 1 Verification
+## Phase 2 Verification
 
 Passed
 
 - ESLint with zero warnings
-- Vitest: 4 tests
+- Vitest: 5 tests
 - TypeScript strict type-check
 - Vite production build
+- Browser verification of Home, navigation, Dashboard unavailable state, and horizontal overflow
 
 ---
 
@@ -81,9 +92,27 @@ Credentials are not persisted by the Phase 1 foundation.
 
 ## Next Authorized Phase
 
-Phase 2 — Dashboard
+Phase 3 — MAST Explorer
 
-Home, navigation, status cards, and recent jobs are not yet implemented.
+Authentication, search, observation listing, and downloads are not yet implemented.
+
+---
+
+## Dashboard Gateway Contract
+
+The dashboard consumes `GET /dashboard/summary` from the configured platform gateway.
+
+The response contains:
+
+- system and pipeline service states
+- active model version
+- connected services and optional latency
+- recent analyses
+- recent downloads
+- active processing jobs
+- gateway generation timestamp
+
+This Phase 2 contract is frontend orchestration only. It does not duplicate health checks, processing, or inference logic owned by the data-pipeline and ML-core services.
 
 ---
 
