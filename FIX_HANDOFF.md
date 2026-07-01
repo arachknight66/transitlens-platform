@@ -119,6 +119,28 @@ Verification:
   and persistent logging to `transitlens-ml-core/logs/tesscut-worker.log`.
 - Confirmed the scheduled task is running with active Python worker processes.
 
+### 2026-07-01 - ML Classification Activated
+
+- Diagnosed classification failure as a missing serving checkpoint: ML Core was
+  healthy but degraded, with zero model loaded.
+- Fixed collector stalls with bounded TESSCut timeouts, a persisted catalog
+  cursor, limited attempts per cycle, and unbuffered worker logging.
+- Bootstrapped both labeled classes without lowering the 20-per-class guardrail.
+- Trained, evaluated, and published `weights/transitlens_baseline.pt`.
+- Restarted ML Core with the checkpoint and restarted scheduled collection.
+- Verified `/health` reports `model_loaded: true`, `/model` returns version
+  `0.1.0`, and a real collected sample receives HTTP 200 from `/predict`.
+
+### 2026-07-01 - Synthetic TESS Demo Fixtures Added
+
+- Added a reproducible generator for explicitly synthetic exoplanet, eclipsing
+  binary, and variable-star TESS-like FITS light curves.
+- Added realistic white/correlated noise, stellar modulation, quality flags,
+  cadence gaps, primary transits, and binary secondary eclipses.
+- Embedded synthetic provenance in FITS headers and generated separate truth
+  JSON files containing the known class and physical event parameters.
+- Verified all three FITS files parse and preprocess through the real pipeline.
+
 ## Current Status
 
 All actionable implementation defects identified by the audit are fixed and
