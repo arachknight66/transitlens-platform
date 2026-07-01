@@ -28,7 +28,7 @@ const ResultsPage = () => {
         eyebrow="Scientific summary"
         title="Results"
         description="Review pipeline-derived transit metrics, observation provenance, and the associated ML Core prediction."
-        action={analysisId ? <Link to={`/analysis?analysis_id=${encodeURIComponent(analysisId)}`} className="rounded-lg border border-white/10 px-4 py-2.5 text-xs font-semibold text-slate-300 hover:bg-white/5">Open analysis workspace</Link> : undefined}
+        action={analysisId ? <div className="flex flex-wrap gap-2"><Link to={`/analysis?analysis_id=${encodeURIComponent(analysisId)}`} className="rounded-lg border border-white/10 px-4 py-2.5 text-xs font-semibold text-slate-300 hover:bg-white/5">Open analysis workspace</Link><Link to={`/reports?analysis_id=${encodeURIComponent(analysisId)}`} className="rounded-lg bg-signal-400 px-4 py-2.5 text-xs font-semibold text-space-950 hover:bg-signal-300">Generate report</Link></div> : undefined}
       />
 
       <div className="mt-8 space-y-7">

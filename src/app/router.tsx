@@ -9,6 +9,7 @@ const MastExplorerPage = lazy(() => import('../pages/MastExplorerPage'));
 const UploadPage = lazy(() => import('../pages/UploadPage'));
 const AnalysisPage = lazy(() => import('../pages/AnalysisPage'));
 const ResultsPage = lazy(() => import('../pages/ResultsPage'));
+const ReportsPage = lazy(() => import('../pages/ReportsPage'));
 
 const loadingFallback = (
   <div className="grid min-h-screen place-items-center bg-space-950 text-sm text-slate-300" role="status">
@@ -44,6 +45,10 @@ export const router = createBrowserRouter([
       {
         path: 'results',
         element: <Suspense fallback={loadingFallback}><ResultsPage /></Suspense>,
+      },
+      {
+        path: 'reports',
+        element: <Suspense fallback={loadingFallback}><ReportsPage /></Suspense>,
       },
       {
         path: '*',
