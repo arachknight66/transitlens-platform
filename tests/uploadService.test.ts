@@ -52,7 +52,7 @@ describe('uploadObservation', () => {
 
     await expect(resultPromise).resolves.toEqual(expect.objectContaining({ analysis_id: 'a1' }));
     expect(onProgress).toHaveBeenCalledWith({ loaded: 50, total: 100, percentage: 50 });
-    expect(xhr.open).toHaveBeenCalledWith('POST', expect.stringMatching(/\/uploads$/));
+    expect(xhr.open).toHaveBeenCalledWith('POST', expect.stringMatching(/\/upload$/));
     expect(xhr.send).toHaveBeenCalledWith(expect.any(FormData));
   });
 

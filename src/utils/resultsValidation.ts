@@ -19,8 +19,13 @@ export const validateScientificResults = (results: ScientificResults): ResultsVa
   if (metrics.some((metric) => !metricIsValid(metric))) {
     return { isValid: false, message: 'The data pipeline returned a non-finite scientific metric.' };
   }
-  if (metrics.some((metric) => metric.source !== 'transitlens-data-pipeline')) {
-    return { isValid: false, message: 'A scientific metric is missing data-pipeline provenance.' };
+  if (
+    metrics.some(
+      (metric) =>
+        !['transitlens-data-pipeline', 'transitlens-ml-core', 'unavailable'].includes(metric.source),
+    )
+  ) {
+    return { isValid: false, message: 'A scientific metric is missing valid provenance.' };
   }
   if (results.processing.input_samples < 0 || results.processing.output_samples < 0) {
     return { isValid: false, message: 'The data pipeline returned invalid sample accounting.' };

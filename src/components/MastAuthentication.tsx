@@ -26,7 +26,7 @@ export const MastAuthentication = ({ hasToken, onSave, onClear }: MastAuthentica
               {hasToken ? 'Session token' : 'Anonymous'}
             </span>
           </div>
-          <p className="mt-1 text-xs leading-5 text-slate-500">Credentials remain in this browser session and are sent only to the configured platform gateway.</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">Credentials are held in an expiring server-side gateway session and are never stored by the browser.</p>
         </div>
         {hasToken && (
           <button type="button" onClick={onClear} className="self-start rounded-lg border border-white/10 px-3 py-2 text-xs text-slate-300 hover:bg-white/5 sm:self-auto">

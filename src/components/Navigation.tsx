@@ -12,9 +12,9 @@ const activeItems = [
   { label: 'Analysis', to: '/analysis' },
   { label: 'Results', to: '/results' },
   { label: 'Reports', to: '/reports' },
+  { label: 'Settings', to: '/settings' },
+  { label: 'About', to: '/about' },
 ] as const;
-
-const futureItems = ['Settings', 'About'] as const;
 
 export const Navigation = ({ onNavigate }: NavigationProps) => (
   <nav aria-label="Primary navigation" className="mt-9 flex flex-1 flex-col">
@@ -39,14 +39,6 @@ export const Navigation = ({ onNavigate }: NavigationProps) => (
               </>
             )}
           </NavLink>
-        </li>
-      ))}
-      {futureItems.map((label) => (
-        <li key={label}>
-          <span className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-700" aria-disabled="true">
-            <span className="h-1.5 w-1.5 rounded-full bg-slate-800" aria-hidden="true" />
-            {label}
-          </span>
         </li>
       ))}
     </ul>

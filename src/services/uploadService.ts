@@ -26,7 +26,8 @@ export const uploadObservation = (file: File, options: UploadOptions = {}): Prom
     const form = new FormData();
     form.append('file', file, file.name);
 
-    xhr.open('POST', `${env.platformApiUrl}/uploads`);
+    xhr.open('POST', `${env.platformApiUrl}/upload`);
+    xhr.withCredentials = true;
     xhr.responseType = 'json';
     xhr.timeout = env.apiTimeoutMs;
 
@@ -68,4 +69,3 @@ export const uploadObservation = (file: File, options: UploadOptions = {}): Prom
 
     xhr.send(form);
   });
-

@@ -1,11 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import { BrandMark } from '../components/BrandMark';
 import { Navigation } from '../components/Navigation';
+import { applyTheme, readPreferences } from '../utils/preferences';
 
 export const AppShell = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    applyTheme(readPreferences().theme);
+  }, []);
 
   return (
     <div className="min-h-screen bg-space-950 text-slate-100">

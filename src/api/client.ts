@@ -57,6 +57,7 @@ export const apiClient = async <T>(path: string, options: ApiRequestOptions = {}
 
   try {
     const response = await fetch(createUrl(path, query), {
+      credentials: 'include',
       ...requestInit,
       body: isJsonBody ? JSON.stringify(body) : (body as BodyInit | null | undefined),
       headers: requestHeaders,

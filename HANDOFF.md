@@ -2,6 +2,50 @@
 
 # TransitLens Platform Handoff
 
+## 2026-07-01 Gateway Foundation Checkpoint
+
+Implemented the platform-owned FastAPI gateway under `backend/`.
+
+- Public `/api` routes now cover dashboard, search, download, upload (plus the documented `/uploads` compatibility alias), process, analysis retrieval, prediction, results, reports, and secure session settings.
+- Pipeline and ML behavior is accessed only through typed HTTP clients. The platform contains no FITS parsing, preprocessing, metric estimation, or inference implementation.
+- Requests and upstream responses are validated; upstream authentication, availability, timeout, malformed-response, and validation failures use stable centralized errors.
+- Session credentials and runtime service URLs are held in expiring server memory behind an opaque HttpOnly SameSite cookie. Tokens are never returned to the browser or logged.
+- PDF, JSON, and CSV reports are generated from validated pipeline and ML outputs and contain observation metadata, prediction, confidence, scientific metrics, model/pipeline versions, and timestamps.
+- OpenAPI includes every required public gateway route.
+
+Verification: backend integration suite passes 7 tests covering route schema, search, download, upload, processing, prediction, results, all report formats, invalid upload, missing prediction, secure token response, and unavailable pipeline translation.
+
+Upstream constraints remain explicit: the data-pipeline `/upload` and ML Core `/predict` HTTP endpoints must be supplied by their owning repositories. Missing transit metrics remain nullable and are never calculated by the platform.
+
+## 2026-07-01 Settings and About Checkpoint
+
+- Settings and About are now active lazy routes in desktop and mobile navigation.
+- MAST credentials were removed from browser session storage. The MAST Explorer and Settings page now configure an expiring gateway-held token; frontend requests use the opaque HttpOnly session cookie exclusively.
+- Runtime Pipeline and ML Core URLs are configured through the gateway. The frontend never uses them as direct request targets.
+- Theme, cache, and download-directory preferences are non-secret, session-scoped browser preferences. The UI explicitly notes that browsers retain control of physical download placement.
+- About documents the project, system architecture, workflow, missions, repository boundaries, versions, model ownership, limitations, and scientific disclaimer.
+
+Verification: frontend lint and strict typecheck pass; Vitest passes 42 tests across 25 files, including Settings credential handling and About content.
+
+## 2026-07-01 Integrated Verification Checkpoint
+
+- The frontend now targets only the platform gateway, including the canonical `POST /api/upload` route. The plural upload route remains a hidden compatibility alias.
+- Upload forwarding is size-limited and streamed from the spooled request file, avoiding a second in-memory copy of large observations.
+- Real data-pipeline nested feature/provenance records are composed into the existing frontend results and report contracts; absent upstream transit metrics remain explicitly nullable.
+- Search, download, processing, and inference responses are structurally validated at the gateway boundary.
+- Failure coverage includes pipeline and ML unavailability, upstream timeouts, authentication rejection, invalid uploads, malformed upstream responses, missing analyses/predictions, and network failures.
+
+Final verification:
+
+- Backend: 11 integration/contract tests pass.
+- Frontend: 42 tests across 25 files pass.
+- ESLint: zero warnings.
+- TypeScript strict typecheck: pass.
+- Vite production build: pass.
+- OpenAPI required-route contract: pass.
+
+End-to-end execution with live upstream services remains dependent on upstream-owned `/upload` and `/predict` HTTP capabilities. This repository provides complete clients and orchestration for those contracts without duplicating their implementation.
+
 ## Repository Status
 
 Current Phase

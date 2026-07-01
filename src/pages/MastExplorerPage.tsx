@@ -11,8 +11,8 @@ const errorMessage = (error: Error): string =>
 
 const MastExplorerPage = () => {
   const session = useMastSession();
-  const search = useMastSearch(session.token);
-  const download = useObservationDownload(session.token);
+  const search = useMastSearch();
+  const download = useObservationDownload();
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
@@ -23,7 +23,7 @@ const MastExplorerPage = () => {
       />
 
       <div className="mt-8 space-y-5">
-        <MastAuthentication hasToken={session.token !== null} onSave={session.saveToken} onClear={session.removeToken} />
+        <MastAuthentication hasToken={session.hasToken} onSave={session.saveToken} onClear={session.removeToken} />
         <MastSearchForm onSearch={(criteria) => {
           search.mutate(criteria);
         }} isSearching={search.isPending} />

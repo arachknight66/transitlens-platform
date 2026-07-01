@@ -1,20 +1,22 @@
-import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { clearMastToken, getMastToken, setMastToken } from '../utils/mastSession';
+import { getSessionSettings, updateSessionSettings } from '../services/settingsService';
+
+const key = ['session-settings'] as const;
 
 export const useMastSession = () => {
-  const [token, setTokenState] = useState<string | null>(getMastToken);
+  const queryClient = useQueryClient();
+  const query = useQuery({ queryKey: key, queryFn: getSessionSettings });
+  const update = useMutation({
+    mutationFn: updateSessionSettings,
+    onSuccess: (data) => queryClient.setQueryData(key, data),
+  });
 
-  const saveToken = (value: string): void => {
-    setMastToken(value);
-    setTokenState(getMastToken());
-  };
-
-  const removeToken = (): void => {
-    clearMastToken();
-    setTokenState(null);
-  };
-
-  return { token, saveToken, removeToken } as const;
+  return {
+    hasToken: query.data?.has_mast_token ?? false,
+    isLoading: query.isLoading,
+    error: query.error ?? update.error,
+    saveToken: (token: string) => { update.mutate({ mast_api_token: token }); },
+    removeToken: () => { update.mutate({ mast_api_token: null }); },
+  } as const;
 };
-

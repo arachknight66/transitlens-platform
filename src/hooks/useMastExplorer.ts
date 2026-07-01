@@ -1,15 +1,12 @@
 import { useMutation } from '@tanstack/react-query';
 
 import { downloadObservation, searchObservations } from '../services/mastService';
-import type { MastSearchCriteria } from '../types/mast';
-
-export const useMastSearch = (token: string | null) =>
+export const useMastSearch = () =>
   useMutation({
-    mutationFn: (criteria: MastSearchCriteria) => searchObservations(criteria, token),
+    mutationFn: searchObservations,
   });
 
-export const useObservationDownload = (token: string | null) =>
+export const useObservationDownload = () =>
   useMutation({
-    mutationFn: (mastId: string) => downloadObservation(mastId, token),
+    mutationFn: downloadObservation,
   });
-

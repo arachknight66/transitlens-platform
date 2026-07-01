@@ -8,15 +8,10 @@ const normalizeTarget = (criteria: MastSearchCriteria): string => {
   return value;
 };
 
-const authHeaders = (token: string | null): HeadersInit | undefined =>
-  token ? { Authorization: `Bearer ${token}` } : undefined;
-
 export const searchObservations = (
   criteria: MastSearchCriteria,
-  token: string | null,
 ): Promise<readonly Observation[]> =>
   apiClient<readonly Observation[]>('/search', {
-    headers: authHeaders(token),
     query: {
       target: normalizeTarget(criteria),
       missions: criteria.missions,
@@ -25,9 +20,8 @@ export const searchObservations = (
     },
   });
 
-export const downloadObservation = (mastId: string, token: string | null): Promise<DownloadedFits> =>
+export const downloadObservation = (mastId: string): Promise<DownloadedFits> =>
   apiClient<DownloadedFits>('/download', {
     method: 'POST',
-    headers: authHeaders(token),
     body: { mast_id: mastId },
   });

@@ -45,6 +45,7 @@ export const generateReport = async (
   try {
     const response = await fetch(`${env.platformApiUrl}/analyses/${encodeURIComponent(analysisId)}/reports`, {
       method: 'POST',
+      credentials: 'include',
       headers: { Accept: acceptByFormat[format], 'Content-Type': 'application/json' },
       body: JSON.stringify({ format }),
       signal: controller.signal,

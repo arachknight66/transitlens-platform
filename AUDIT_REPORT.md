@@ -1,225 +1,290 @@
-# TransitLens Platform Completion Gap Audit
+# TransitLens Full Audit Report
 
 **Audit date:** 2026-07-01  
-**Repository audited:** `transitlens-platform`  
-**Related interfaces reviewed:** `transitlens-data-pipeline`, `transitlens-ml-core`  
-**Audit scope:** Remaining work after completion of Phases 1–8 in `TASKS.md`
+**Workspace:** `C:\Users\arach\Documents\Projects\Transitlens_v2`  
+**Scope:** `transitlens-platform`, `transitlens-platform/backend`, `transitlens-data-pipeline`, `transitlens-ml-core`  
+**Purpose:** Verify the current implementation and identify features still missing, contract gaps, and workflows that are not working properly.
 
 ## Executive Summary
 
-All eight phases explicitly listed in `TASKS.md` are implemented in the frontend. The application is not yet end-to-end complete under the repository `README.md`, `ARCHITECTURE.md`, `CODEX.md`, or Definition of Done.
+The project is much healthier than the previous audit suggested. The frontend, data pipeline, ML core, and platform gateway all have substantial implementations, and their local unit or integration suites pass when run with the right project root and test extras.
 
-The primary release blocker is that the frontend consumes a platform-owned FastAPI gateway that is not implemented in this repository. Consequently, Dashboard, upload, processed analysis retrieval, inference, scientific results, and report generation cannot work against a real platform backend. MAST search and download have upstream HTTP routes, but the platform gateway/proxy layer is still absent.
+However, the product should not yet be treated as end-to-end complete. The most important remaining issue is cross-service contract drift: the platform gateway tests use mocked upstream responses that do not match the real data-pipeline upload/process API or the real ML Core prediction/health API. This means each repository can pass its own tests while the integrated upload -> process -> predict workflow fails against the actual services.
 
-Two required upstream capabilities are also missing:
+**Overall status:** Prototype implementation is broad and mostly tested at repository level; live integrated product is blocked by gateway-to-upstream contract mismatches and unverified real-service orchestration.
 
-1. `transitlens-data-pipeline` has no public byte-upload route.
-2. `transitlens-ml-core` has a stable Python inference result contract but no HTTP application.
+## Verification Run
 
-In addition, transit depth, transit duration, and estimated period are required by the platform but are not produced by the current data-pipeline public contract. Settings and About are required pages but have no phases in `TASKS.md` and remain unimplemented.
+### TransitLens Platform Frontend
 
-**Overall assessment:** Phased frontend prototype complete; integrated product incomplete.  
-**Release recommendation:** Do not label the platform end-to-end complete until Critical and High findings are resolved and contract-level integration tests pass.
+Result: **Pass with corrected root invocation**
 
-## Audit Method
+- `npm.cmd run typecheck`: passed.
+- `npm.cmd exec vitest -- run --root C:/Users/arach/Documents/Projects/Transitlens_v2/transitlens-platform`: 25 files passed, 42 tests passed.
+- `npm.cmd exec eslint -- . --max-warnings 0 --ignore-pattern **/.pytest_cache/**`: passed.
+- `node_modules\.bin\vite.cmd build C:/Users/arach/Documents/Projects/Transitlens_v2/transitlens-platform`: production build passed.
 
-The audit compared:
+Notes:
 
-- required pages and responsibilities in `README.md`, `ARCHITECTURE.md`, and `CODEX.md`;
-- phase acceptance criteria in `TASKS.md`;
-- completion claims and declared contracts in `HANDOFF.md`;
-- actual frontend routes, navigation, and service calls under `src/`;
-- public API routes in `transitlens-data-pipeline`;
-- public inference types and HTTP surface in `transitlens-ml-core`.
+- Plain `npm test` and `npm run build` failed in the Codex sandbox because Vite/Vitest resolved paths through the sandbox while setup files and HTML assets were resolved against the real workspace. Explicitly passing the real root made the test and build checks pass.
+- Plain `npm run lint` tried to scan an inaccessible backend `.pytest_cache`; excluding `.pytest_cache` made lint pass.
 
-No scientific algorithms were executed or reimplemented during this audit.
+### TransitLens Platform Gateway
 
-## Findings
+Result: **Pass locally, but tests mask contract drift**
 
-### F-01 — Platform FastAPI gateway is absent
+- `uv run --extra test python -m pytest --basetemp ...`: 11 tests passed.
 
-**Severity:** Critical  
-**Owner:** `transitlens-platform`  
-**Status:** Open
+Warnings:
 
-The repository owns the Backend API Gateway and specifies FastAPI as its backend stack, but contains no implemented platform backend. The frontend defaults to `http://localhost:8000/api` and calls gateway contracts that exist only as TypeScript consumers and documentation.
+- FastAPI/Starlette deprecation warning for the test client.
+- Pytest cache warning from an existing `.pytest_cache` path.
 
-Affected contracts:
+### TransitLens Data Pipeline
 
-| Frontend contract | Required behavior |
-|---|---|
-| `GET /dashboard/summary` | Aggregate pipeline/ML health, model version, downloads, analyses, and jobs |
-| `GET /search` | Proxy/orchestrate data-pipeline MAST search |
-| `POST /download` | Proxy/orchestrate data-pipeline observation download |
-| `POST /uploads` | Accept multipart local files and submit them to the data pipeline |
-| `GET /analyses/{id}` | Return processed light-curve arrays and provenance |
-| `POST /analyses/{id}/prediction` | Submit the processed record to ML Core |
-| `GET /analyses/{id}/results` | Compose scientific metrics, provenance, and prediction |
-| `POST /analyses/{id}/reports` | Generate PDF, JSON, or CSV artifacts |
+Result: **Pass**
 
-**Impact:** The majority of implemented user workflows resolve to loading/error states without a separately supplied gateway.
+- `uv run pytest --basetemp ...`: 131 tests passed.
+- Coverage: 95.66%, above the 90% gate.
+- `uv run ruff check .`: passed.
+- `uv run black --check .`: passed.
 
-**Required remediation:** Implement a FastAPI gateway in this repository using only the public APIs of the data-pipeline and ML-core services. Add request/response validation, timeouts, error translation, secure configuration, and OpenAPI contract tests.
+Warnings:
 
-### F-02 — Data Pipeline cannot accept uploaded file bytes
+- Pytest cache warning from an existing `.pytest_cache` path.
 
-**Severity:** Critical  
-**Owner:** `transitlens-data-pipeline` for the upstream API; `transitlens-platform` for orchestration  
-**Status:** Open
+### TransitLens ML Core
 
-The data pipeline exposes `/status`, `/search`, `/download`, and `/process`. Its `/process` route accepts a path already inside the pipeline cache. It does not expose a multipart or streamed upload endpoint.
+Result: **Pass**
 
-The platform must not use shared-filesystem assumptions or parse FITS/CSV files locally. Therefore, the platform gateway cannot safely fulfill `POST /uploads` using the current upstream public interface.
+- `uv run --extra dev python -m pytest --basetemp ...`: 173 tests passed.
+- Coverage: 96.27%, above the 90% gate.
+- `uv run --extra dev python -m ruff check .`: passed.
+- `uv run --extra dev python -m black --check .`: passed.
 
-**Impact:** Local FITS, FIT, and CSV uploads cannot complete the required preprocessing workflow through public APIs.
+Warnings:
 
-**Required remediation:** Add an authenticated, size-limited, streamed byte-upload endpoint to `transitlens-data-pipeline`. It should place accepted content in the pipeline-owned cache, validate supported formats, return an opaque file reference, and allow `/process` to consume that reference without exposing arbitrary filesystem paths.
+- Pytest cache warning from an existing `.pytest_cache` path.
 
-### F-03 — ML Core has no HTTP inference service
+## Critical Findings
+
+### F-01 - Gateway upload contract does not match the real data-pipeline upload API
 
 **Severity:** Critical  
-**Owner:** `transitlens-ml-core`  
+**Owner:** `transitlens-platform/backend`  
 **Status:** Open
 
-ML Core defines the stable `PredictionResult` fields:
+The real data pipeline `POST /upload` returns:
 
-- probability;
-- confidence;
-- predicted class;
-- model version;
-- inference time.
+- `file_id`
+- `media_type`
+- `size_bytes`
 
-It does not expose a FastAPI/HTTP route. The platform is forbidden from importing or duplicating ML implementation.
+The gateway expects:
 
-**Impact:** `POST /analyses/{id}/prediction` cannot be fulfilled through the required service boundary.
+- `upload_id`
+- `file_reference`
+- `filename`
+- `format`
+- `size_bytes`
 
-**Required remediation:** Expose a public inference API from `transitlens-ml-core` that accepts the canonical processed-light-curve contract, loads an approved model artifact, and returns the existing stable prediction contract. Include health/model-info endpoints and timeout/error semantics.
+The gateway tests mock the gateway's expected response, so they pass without proving compatibility with the actual pipeline.
 
-### F-04 — Three required scientific metrics have no upstream producer
+**Impact:** A real platform upload will likely fail at gateway validation with `invalid_response`.
+
+**Required fix:** Update gateway `UpstreamUploadResponse` and upload orchestration to consume the real pipeline fields. Map `file_id` into the platform receipt and use it for processing.
+
+### F-02 - Gateway process request does not match the real data-pipeline process API
+
+**Severity:** Critical  
+**Owner:** `transitlens-platform/backend`  
+**Status:** Open
+
+The real data pipeline `POST /process` accepts exactly one of:
+
+- `file_id`
+- `fits_path`
+
+The gateway sends:
+
+- `file_reference`
+- `mission`
+
+**Impact:** Upload processing and manual processing through the gateway will not work against the real data-pipeline service.
+
+**Required fix:** Send `file_id` when processing uploaded files. Preserve `fits_path` only for legacy cached-path flows if the gateway intentionally supports them.
+
+### F-03 - Gateway prediction contract does not match the real ML Core response
+
+**Severity:** Critical  
+**Owner:** `transitlens-platform/backend`  
+**Status:** Open
+
+The real ML Core `POST /predict` response uses `prediction`. The gateway expects `predicted_class`.
+
+The gateway tests mock `predicted_class`, so they do not catch the drift.
+
+**Impact:** Gateway prediction requests will likely fail validation against real ML Core responses.
+
+**Required fix:** Map ML Core `prediction` to the platform's internal `predicted_class`, or rename the platform contract to match ML Core consistently.
+
+### F-04 - Gateway dashboard checks ML Core at the wrong health route
 
 **Severity:** High  
-**Owner:** Scientific metric owner to be assigned; likely `transitlens-data-pipeline`  
+**Owner:** `transitlens-platform/backend`  
 **Status:** Open
 
-The data-pipeline feature contract currently provides SNR, observation duration, cadence, and statistical features. It does not provide:
+The real ML Core service exposes:
 
-- transit depth;
-- transit duration;
-- estimated period.
+- `GET /health`
+- `GET /model`
+- `POST /predict`
 
-The Results UI correctly displays these as unavailable when values are null and does not estimate them locally.
+The gateway dashboard calls ML Core at `/status`.
 
-**Impact:** A complete scientific summary and complete reports cannot be produced from current upstream outputs.
+**Impact:** The dashboard can report ML Core as offline/degraded even when the real ML service is healthy.
 
-**Required remediation:** Define the authoritative algorithm owner and add these values to a versioned public scientific-results contract. Document units, nullability, method/version provenance, and validation ranges. Do not calculate them in the platform.
+**Required fix:** Change the gateway dashboard ML health check to `/health`, and fetch model identity from `/model` when needed.
 
-### F-05 — Settings page is missing
+## High Findings
+
+### F-05 - Full live end-to-end workflow has not been verified
 
 **Severity:** High  
-**Owner:** `transitlens-platform`  
+**Owner:** All repositories  
 **Status:** Open
 
-Settings is required by `ARCHITECTURE.md` and `CODEX.md`, but no `/settings` route exists and navigation marks it disabled.
+The local suites verify each repository mostly in isolation. I did not find evidence from this run that the actual services were started together and exercised through the browser or gateway using real HTTP calls.
 
-Required settings:
+The workflow still needs live proof for:
 
-- MAST API token;
-- Pipeline API URL;
-- ML Core API URL;
-- default download location;
-- theme;
-- cache settings.
+- Search MAST through gateway.
+- Download FITS through gateway.
+- Upload FITS/CSV through gateway to data pipeline.
+- Process by opaque uploaded file ID.
+- Fetch analysis from gateway memory/store.
+- Predict through real ML Core.
+- View results.
+- Export PDF, JSON, and CSV reports.
 
-**Impact:** Users cannot configure the service topology required by the Definition of Done. The build-time `VITE_PLATFORM_API_URL` alone is insufficient for the required settings experience.
+**Required fix:** Add a cross-service integration suite or Playwright workflow that starts the data pipeline, ML Core, gateway, and frontend together.
 
-**Required remediation:** Implement the Settings page and define which values are runtime-session settings versus server-managed environment configuration. Credentials must never enter local storage, logs, URLs, or source-controlled files.
+### F-06 - Gateway state is in-memory only
 
-### F-06 — About page is missing
+**Severity:** High for production, acceptable for prototype  
+**Owner:** `transitlens-platform/backend`  
+**Status:** Open / Deferred depending on target
+
+Analyses, predictions, downloads, and session data are stored in server memory. Restarting the gateway loses active analysis references and prediction/report state.
+
+**Impact:** The app can work for a single prototype session but is not durable.
+
+**Required fix:** For production, add persistent storage for analyses, reports, predictions, session metadata, and job history. For prototype, document this as an intentional limitation in user-facing docs.
+
+### F-07 - Scientific metrics remain nullable unless produced upstream
+
+**Severity:** High for scientific completeness  
+**Owner:** Data/science contract owner  
+**Status:** Partially open
+
+The gateway and reports can surface `transit_depth`, `transit_duration`, `estimated_period`, and `signal_to_noise_ratio`. ML Core can echo scientific descriptors from processed metadata when present. The data pipeline currently guarantees SNR and general statistics, but transit depth, duration, and period are not clearly guaranteed as authoritative pipeline outputs.
+
+**Impact:** Results and reports may display unavailable values for required scientific metrics.
+
+**Required fix:** Decide the authoritative owner for these metrics, define units and nullability, and add contract tests from pipeline/ML output through gateway results and reports.
+
+## Medium Findings
+
+### F-08 - Deferred product features are still not implemented
 
 **Severity:** Medium  
-**Owner:** `transitlens-platform`  
-**Status:** Open
+**Owner:** Product roadmap  
+**Status:** Deferred
 
-About is a required page, but no `/about` route exists and navigation marks it disabled.
+The following are still listed as future/deferred work across the task and handoff files:
 
-**Impact:** The application lacks a required user-facing explanation of purpose, workflow, service ownership, software/model versions, limitations, and scientific-use disclaimer.
+- Realtime monitoring.
+- Multi-user authentication.
+- Observation history sync.
+- Cloud deployment.
+- Notifications.
+- Auto dataset retraining.
+- Background workers and schedulers.
+- Distributed processing/training.
+- Multiple archive providers.
+- Advanced explainability.
+- Autoencoder, attention, feature fusion, ensembles, quantization, and multi-class classification.
+- Multiple model selection and comparison.
 
-**Required remediation:** Implement an About page based strictly on repository documentation and live version metadata where available.
+These are not blockers for the current prototype unless the release target includes them.
 
-### F-07 — Tests validate mocked contracts, not real service compatibility
-
-**Severity:** High  
-**Owner:** `transitlens-platform`, with upstream repositories participating  
-**Status:** Open
-
-The frontend suite verifies routing, UI states, structural validation, and mocked network requests. It does not prove that a real platform gateway, data pipeline, and ML Core service agree on paths, payloads, errors, CORS, upload behavior, timeouts, or report downloads.
-
-**Impact:** Contract drift may remain undetected despite all frontend tests passing.
-
-**Required remediation:** Add:
-
-- OpenAPI schema compatibility tests;
-- gateway-to-pipeline integration tests;
-- gateway-to-ML integration tests;
-- browser-level search → download/upload → process → predict → results → report tests;
-- failure-path tests for unavailable services, large uploads, malformed outputs, and timeouts.
-
-### F-08 — Session/configuration behavior is only partially implemented
+### F-09 - Environment/tooling commands need documented Windows-safe forms
 
 **Severity:** Medium  
-**Owner:** `transitlens-platform`  
+**Owner:** Developer experience  
 **Status:** Open
 
-The frontend retains a MAST token and current analysis reference in browser session storage. There is no backend session model, secure server-side credential handling, cache policy, or runtime configuration lifecycle.
+Several plain commands failed because of Windows PowerShell policy, sandbox path resolution, or inaccessible temp/cache directories. Working forms were found, but they should be documented.
 
-**Impact:** Session continuity, credential ownership, and multi-request orchestration are not fully defined.
+Recommended documentation:
 
-**Required remediation:** Define a minimal single-user prototype session contract. Keep credentials server-side or ephemeral, return opaque session identifiers, document expiry, and avoid persisting secrets in browser or application logs.
+- Use `npm.cmd` on Windows when PowerShell blocks `npm.ps1`.
+- For Vitest, pass the real platform root when running inside Codex/sandboxed environments.
+- For Vite 8, use `vite build <root>`, not `vite --root <root> build`.
+- For Python tests, set a writable pytest base temp in restricted environments.
+- Use `uv run --extra dev python -m pytest` or `uv run --extra test python -m pytest` so extras are installed and script-shim permission issues are avoided.
 
-## Definition-of-Done Audit
+## Working Features Confirmed By Tests
 
-| Required outcome | Frontend | Real backend/upstream path | Audit result |
-|---|---:|---:|---|
-| Configure MAST credentials | Partial | Missing gateway/session handling | Not complete |
-| Search observations | Implemented | Pipeline route exists; gateway absent | Not integrated |
-| Download FITS | Implemented | Pipeline route exists; gateway absent | Not integrated |
-| Upload local FITS/CSV | Implemented | Upstream upload route absent | Blocked |
-| Trigger preprocessing | UI contract implemented | Upload-to-process bridge absent | Blocked |
-| Visualize preprocessing stages | Implemented | Requires gateway analysis record | Not integrated |
-| Run inference | Implemented | ML HTTP API absent | Blocked |
-| View scientific metrics | Implemented | Three required metrics absent upstream | Partial |
-| Generate reports | Implemented | Gateway report generator absent | Not integrated |
-| Export results | Implemented | Gateway binary artifacts absent | Not integrated |
+### Platform Frontend
 
-## Recommended Remediation Order
+- Routes for Home, Dashboard, MAST Explorer, Upload, Analysis, Results, Reports, Settings, and About.
+- TypeScript typecheck.
+- Component/service tests for the core user flows.
+- Production build.
+- Lint with zero warnings when cache folders are excluded.
 
-1. **Freeze versioned contracts.** Define OpenAPI schemas for pipeline upload, ML inference, platform analysis/results, and report generation.
-2. **Add the data-pipeline upload API.** Resolve the local-file ingestion blocker without shared filesystem coupling.
-3. **Add the ML Core inference API.** Expose the existing stable predictor contract over HTTP.
-4. **Implement the platform FastAPI gateway.** Orchestrate only; do not import scientific implementations.
-5. **Assign and implement missing scientific metrics upstream.** Include units and provenance.
-6. **Implement Settings and About.** Complete the required route set and secure configuration flow.
-7. **Add cross-repository integration tests.** Test real services and the complete browser workflow.
-8. **Run a final release audit.** Recheck accessibility, responsive layouts, security, error states, performance, and the full Definition of Done.
+### Platform Gateway
 
-## Acceptance Criteria for Closing This Audit
+- Public `/api` route surface exists.
+- Settings session route avoids returning raw MAST token.
+- Mocked search, download, upload, process, prediction, results, and report flow passes.
+- Error translation tests cover invalid upload, missing prediction, unavailable pipeline, ML failures, authentication failure, and malformed search response.
 
-This audit can be closed when:
+### Data Pipeline
 
-- Settings and About are routable and tested;
-- every frontend gateway contract has a matching implemented FastAPI route;
-- pipeline upload and ML inference are available through public APIs;
-- transit depth, transit duration, and estimated period have an authoritative upstream producer or an approved documented nullable policy;
-- all service contracts are versioned and tested against live implementations;
-- the complete workflow succeeds without mocks;
-- credentials are handled securely;
-- PDF, JSON, and CSV artifacts contain the required information and pass format validation;
-- `HANDOFF.md` records the integrated verification evidence.
+- MAST search/download abstractions.
+- FITS/FIT and CSV upload validation.
+- Opaque `file_id` processing.
+- FITS reading and validation.
+- Preprocessing and feature generation.
+- NumPy/Parquet export.
+- REST integration and performance tests.
+- Coverage above required threshold.
+
+### ML Core
+
+- Dataset loading and splitting.
+- CNN model, classifier, training, evaluation, checkpointing, ONNX export, and inference.
+- Public FastAPI inference service with `/health`, `/model`, and `/predict`.
+- Prediction schema and validation.
+- Coverage above required threshold.
+
+## Recommended Fix Order
+
+1. Update gateway contracts to match real data-pipeline upload/process responses and requests.
+2. Update gateway prediction mapping to match ML Core's `prediction` field.
+3. Change ML dashboard health check from `/status` to `/health` and fetch model info from `/model`.
+4. Add gateway tests that import or fixture against real upstream OpenAPI/schema examples instead of hand-written stale mocks.
+5. Run a real cross-service integration workflow through gateway and frontend.
+6. Decide whether missing transit depth/duration/period are required for prototype closeout or explicitly nullable.
+7. Document in-memory gateway state and Windows-safe verification commands.
+8. Revisit deferred roadmap features only after the integrated prototype is stable.
 
 ## Final Audit Opinion
 
-The repository accurately represents a strong, production-oriented frontend prototype across all eight planned phases. Calling the phases complete is justified against `TASKS.md`. Calling the overall TransitLens platform complete is not yet justified because the owned backend gateway and several required upstream public capabilities are missing.
+TransitLens is no longer missing the broad feature surface called out in the old audit. The current risk is sharper and more actionable: the repositories have drifted at their service boundaries. Fixing the gateway's upstream contracts should be the next priority before adding new features.
 
-The correct project status is:
+The correct status is:
 
-> **Frontend phase plan complete; end-to-end platform integration blocked by gateway and upstream API gaps.**
+> Repository-level implementation and tests are strong; end-to-end operation is not yet proven because gateway-to-upstream contracts are currently inconsistent.

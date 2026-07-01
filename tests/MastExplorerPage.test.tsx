@@ -30,6 +30,7 @@ describe('MastExplorerPage', () => {
 
   it('renders observations and completes a pipeline download', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify({ pipeline_url: 'http://pipeline', ml_core_url: 'http://ml', has_mast_token: false, expires_at: '2026-07-01T12:00:00Z' }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
       .mockResolvedValueOnce(new Response(JSON.stringify([observation]), { status: 200, headers: { 'Content-Type': 'application/json' } }))
       .mockResolvedValueOnce(new Response(JSON.stringify({ mast_id: '42', product_filename: 'target_lc.fits', data_uri: 'mast:product/lc', path: 'cache/target_lc.fits', from_cache: false }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
     renderPage();
@@ -40,7 +41,7 @@ describe('MastExplorerPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Download FITS' }));
 
     expect(await screen.findByText('FITS download complete')).toBeVisible();
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
     await waitFor(() => {
       expect(screen.getByText(/target_lc\.fits/)).toBeVisible();
     });

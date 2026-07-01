@@ -10,6 +10,8 @@ const UploadPage = lazy(() => import('../pages/UploadPage'));
 const AnalysisPage = lazy(() => import('../pages/AnalysisPage'));
 const ResultsPage = lazy(() => import('../pages/ResultsPage'));
 const ReportsPage = lazy(() => import('../pages/ReportsPage'));
+const SettingsPage = lazy(() => import('../pages/SettingsPage'));
+const AboutPage = lazy(() => import('../pages/AboutPage'));
 
 const loadingFallback = (
   <div className="grid min-h-screen place-items-center bg-space-950 text-sm text-slate-300" role="status">
@@ -49,6 +51,14 @@ export const router = createBrowserRouter([
       {
         path: 'reports',
         element: <Suspense fallback={loadingFallback}><ReportsPage /></Suspense>,
+      },
+      {
+        path: 'settings',
+        element: <Suspense fallback={loadingFallback}><SettingsPage /></Suspense>,
+      },
+      {
+        path: 'about',
+        element: <Suspense fallback={loadingFallback}><AboutPage /></Suspense>,
       },
       {
         path: '*',
