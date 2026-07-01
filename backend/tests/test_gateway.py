@@ -12,6 +12,7 @@ from transitlens_gateway.config import GatewaySettings
 
 
 PROCESSED = {
+    "file_id": "opaque-1",
     "time": [1.0, 2.0], "flux": [1.0, 0.9], "normalized_flux": [1.0, 0.9],
     "median_filtered_flux": [1.0, 0.95], "wavelet_flux": [1.0, 0.92], "quality": [0, 0],
     "metadata": {"pipeline_version": "2.0", "schema_version": "1", "input_samples": 2},
@@ -72,6 +73,13 @@ def test_openapi_contains_all_public_gateway_routes(client: TestClient) -> None:
     paths = client.get("/openapi.json").json()["paths"]
     required = {"/api/dashboard/summary", "/api/search", "/api/download", "/api/upload", "/api/process", "/api/analyses/{analysis_id}", "/api/analyses/{analysis_id}/prediction", "/api/analyses/{analysis_id}/results", "/api/analyses/{analysis_id}/reports"}
     assert required <= paths.keys()
+
+
+def test_gateway_health(client: TestClient) -> None:
+    assert client.get("/health").json() == {
+        "status": "ok",
+        "service": "transitlens-platform-gateway",
+    }
 
 
 def test_search_download_upload_process_predict_results_and_reports(client: TestClient) -> None:

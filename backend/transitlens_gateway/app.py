@@ -67,6 +67,11 @@ def create_app(settings: GatewaySettings | None = None, *, clients: UpstreamClie
         return response
 
     register_error_handlers(app)
+
+    @app.get("/health", include_in_schema=False)
+    def health() -> dict[str, str]:
+        return {"status": "ok", "service": "transitlens-platform-gateway"}
+
     app.include_router(router)
     return app
 

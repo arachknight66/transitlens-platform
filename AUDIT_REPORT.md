@@ -9,15 +9,20 @@
 
 The project is much healthier than the previous audit suggested. The frontend, data pipeline, ML core, and platform gateway all have substantial implementations, and their local unit or integration suites pass when run with the right project root and test extras.
 
-However, the product should not yet be treated as end-to-end complete. The most important remaining issue is cross-service contract drift: the platform gateway tests use mocked upstream responses that do not match the real data-pipeline upload/process API or the real ML Core prediction/health API. This means each repository can pass its own tests while the integrated upload -> process -> predict workflow fails against the actual services.
+The service-boundary defects found during this audit have now been fixed. Gateway
+tests use the real upstream request and response shapes for upload, processing,
+prediction, health, and model identity. Scientific descriptors also flow from
+the pipeline or ML Core into results and reports with explicit provenance.
 
-**Overall status:** Prototype implementation is broad and mostly tested at repository level; live integrated product is blocked by gateway-to-upstream contract mismatches and unverified real-service orchestration.
+**Overall status:** The prototype is repository-tested and its known contract
+blockers are resolved. A live multi-process browser run remains a release
+validation activity, not a known implementation failure.
 
 ## Verification Run
 
 ### TransitLens Platform Frontend
 
-Result: **Pass with corrected root invocation**
+Result: **Pass**
 
 - `npm.cmd run typecheck`: passed.
 - `npm.cmd exec vitest -- run --root C:/Users/arach/Documents/Projects/Transitlens_v2/transitlens-platform`: 25 files passed, 42 tests passed.
@@ -26,14 +31,14 @@ Result: **Pass with corrected root invocation**
 
 Notes:
 
-- Plain `npm test` and `npm run build` failed in the Codex sandbox because Vite/Vitest resolved paths through the sandbox while setup files and HTML assets were resolved against the real workspace. Explicitly passing the real root made the test and build checks pass.
-- Plain `npm run lint` tried to scan an inaccessible backend `.pytest_cache`; excluding `.pytest_cache` made lint pass.
+- On Windows systems that block the PowerShell script shim, invoke the same
+  package scripts through `npm.cmd`.
 
 ### TransitLens Platform Gateway
 
-Result: **Pass locally, but tests mask contract drift**
+Result: **Pass with real upstream-shaped contract coverage**
 
-- `uv run --extra test python -m pytest --basetemp ...`: 11 tests passed.
+- `python -m pytest -q`: 12 tests passed.
 
 Warnings:
 
@@ -72,7 +77,7 @@ Warnings:
 
 **Severity:** Critical  
 **Owner:** `transitlens-platform/backend`  
-**Status:** Open
+**Status:** Resolved
 
 The real data pipeline `POST /upload` returns:
 
@@ -98,7 +103,7 @@ The gateway tests mock the gateway's expected response, so they pass without pro
 
 **Severity:** Critical  
 **Owner:** `transitlens-platform/backend`  
-**Status:** Open
+**Status:** Resolved
 
 The real data pipeline `POST /process` accepts exactly one of:
 
@@ -118,7 +123,7 @@ The gateway sends:
 
 **Severity:** Critical  
 **Owner:** `transitlens-platform/backend`  
-**Status:** Open
+**Status:** Resolved
 
 The real ML Core `POST /predict` response uses `prediction`. The gateway expects `predicted_class`.
 
@@ -132,7 +137,7 @@ The gateway tests mock `predicted_class`, so they do not catch the drift.
 
 **Severity:** High  
 **Owner:** `transitlens-platform/backend`  
-**Status:** Open
+**Status:** Resolved
 
 The real ML Core service exposes:
 
@@ -152,7 +157,7 @@ The gateway dashboard calls ML Core at `/status`.
 
 **Severity:** High  
 **Owner:** All repositories  
-**Status:** Open
+**Status:** Validation pending
 
 The local suites verify each repository mostly in isolation. I did not find evidence from this run that the actual services were started together and exercised through the browser or gateway using real HTTP calls.
 
@@ -173,7 +178,7 @@ The workflow still needs live proof for:
 
 **Severity:** High for production, acceptable for prototype  
 **Owner:** `transitlens-platform/backend`  
-**Status:** Open / Deferred depending on target
+**Status:** Documented prototype limitation
 
 Analyses, predictions, downloads, and session data are stored in server memory. Restarting the gateway loses active analysis references and prediction/report state.
 
@@ -185,7 +190,7 @@ Analyses, predictions, downloads, and session data are stored in server memory. 
 
 **Severity:** High for scientific completeness  
 **Owner:** Data/science contract owner  
-**Status:** Partially open
+**Status:** Resolved for nullable prototype contract
 
 The gateway and reports can surface `transit_depth`, `transit_duration`, `estimated_period`, and `signal_to_noise_ratio`. ML Core can echo scientific descriptors from processed metadata when present. The data pipeline currently guarantees SNR and general statistics, but transit depth, duration, and period are not clearly guaranteed as authoritative pipeline outputs.
 
@@ -222,7 +227,7 @@ These are not blockers for the current prototype unless the release target inclu
 
 **Severity:** Medium  
 **Owner:** Developer experience  
-**Status:** Open
+**Status:** Resolved
 
 Several plain commands failed because of Windows PowerShell policy, sandbox path resolution, or inaccessible temp/cache directories. Working forms were found, but they should be documented.
 
@@ -270,21 +275,22 @@ Recommended documentation:
 - Prediction schema and validation.
 - Coverage above required threshold.
 
-## Recommended Fix Order
+## Remaining Release Work
 
-1. Update gateway contracts to match real data-pipeline upload/process responses and requests.
-2. Update gateway prediction mapping to match ML Core's `prediction` field.
-3. Change ML dashboard health check from `/status` to `/health` and fetch model info from `/model`.
-4. Add gateway tests that import or fixture against real upstream OpenAPI/schema examples instead of hand-written stale mocks.
-5. Run a real cross-service integration workflow through gateway and frontend.
-6. Decide whether missing transit depth/duration/period are required for prototype closeout or explicitly nullable.
-7. Document in-memory gateway state and Windows-safe verification commands.
-8. Revisit deferred roadmap features only after the integrated prototype is stable.
+1. Run the four services together with production-like model and FITS fixtures,
+   then execute the browser workflow as release validation.
+2. Add durable storage before production or multi-instance deployment.
+3. Implement F-08 items only when they enter the agreed product scope.
 
 ## Final Audit Opinion
 
-TransitLens is no longer missing the broad feature surface called out in the old audit. The current risk is sharper and more actionable: the repositories have drifted at their service boundaries. Fixing the gateway's upstream contracts should be the next priority before adding new features.
+TransitLens is no longer missing the broad feature surface called out in the old
+audit, and the service-boundary drift found in this audit has been corrected.
+The remaining risk is operational validation with all real processes and model
+artifacts running together.
 
 The correct status is:
 
-> Repository-level implementation and tests are strong; end-to-end operation is not yet proven because gateway-to-upstream contracts are currently inconsistent.
+> Repository-level implementation and tests are strong; known gateway contract
+> defects are fixed, while a production-like live orchestration run remains to
+> be completed before release.

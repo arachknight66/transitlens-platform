@@ -118,8 +118,13 @@ async def _process_reference(payload: ProcessRequest, request: Request, session:
     analysis_id = f"analysis-{uuid4().hex}"
     try:
         analysis = ProcessedAnalysis.model_validate({
-            **upstream, "analysis_id": analysis_id, "status": "processed",
+            "analysis_id": analysis_id, "status": "processed",
             "source": {"filename": payload.filename or payload.source_reference, "target": payload.target, "mission": payload.mission},
+            "time": upstream.get("time"), "flux": upstream.get("flux"),
+            "normalized_flux": upstream.get("normalized_flux"),
+            "median_filtered_flux": upstream.get("median_filtered_flux"),
+            "wavelet_flux": upstream.get("wavelet_flux"), "quality": upstream.get("quality"),
+            "metadata": upstream.get("metadata"), "features": upstream.get("features"),
         })
     except (ValidationError, TypeError) as exc:
         raise GatewayError(502, "invalid_response", "Data pipeline returned invalid processed data.") from exc

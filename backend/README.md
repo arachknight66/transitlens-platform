@@ -24,3 +24,32 @@ Configuration uses environment variables prefixed with `TRANSITLENS_`:
 
 Runtime user credentials and service overrides are kept in an expiring in-memory server session and addressed by an HttpOnly SameSite cookie. A production deployment should run behind HTTPS, set `TRANSITLENS_SESSION_COOKIE_SECURE=true`, and restrict configurable upstream hosts at the network boundary.
 
+## Prototype persistence boundary
+
+Analyses, predictions, download references, and report inputs are held in the
+gateway process memory. Restarting the gateway clears them. This is intentional
+for the current single-session prototype; a production deployment requires a
+durable database or object store and shared session storage before running more
+than one gateway instance.
+
+## Windows verification
+
+PowerShell installations that block `npm.ps1` should invoke Node package scripts
+with `npm.cmd`. From the platform root, the verified commands are:
+
+```powershell
+npm.cmd run typecheck
+npm.cmd test -- --run
+npm.cmd run lint
+npm.cmd run build
+```
+
+From this backend directory:
+
+```powershell
+python -m pytest -q
+```
+
+In restricted runners, give pytest a writable `--basetemp` directory. When using
+`uv`, include the repository's test extra so test dependencies are present:
+`uv run --extra test python -m pytest`.
